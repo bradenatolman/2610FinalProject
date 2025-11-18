@@ -1,16 +1,7 @@
-# Dynamic Budgeting App Proposal
+# Dynamic Budgeting App Design Plan
 
 ## Overview
 
-For our final project, we plan to build a **dynamic budgeting app** that helps users
-manage their money more easily. The app will let users create budgets, track
-spending, upload receipts, and organize expenses into categories that make sense to
-them.
-
-The main goal is to make budgeting simpler and more visual, especially for people who
-want to see where their money is going each month. The frontend will be built with
-**React**, and the backend will use **Django** to handle authentication, data
-storage, and receipt uploads.
 
 ## Feature List
 
@@ -18,12 +9,14 @@ storage, and receipt uploads.
 1. **View Monthly and Yearly Budgets**
 Users can see their budget and actual spending for each category in a simple table
 format.
+	Design
+	
 
 2. **Upload Receipts**
 Users can upload pictures of receipts to keep a record of purchases. (Initially, this
 may just save the image.)
 
-3. **Login and Authentication**
+3. **Login and Authentication** ``Completed``
 Each user will have their own account so they can securely access their personal
 budget data.
 
@@ -34,6 +27,7 @@ budget data.
 5. **Custom Categories**
 Users can group expenses however they want (for example: Food, Rent,
 Entertainment, etc.).
+
 
 ### Nice-to-Have Features
 1. **OCR Receipt Reading**
@@ -86,7 +80,7 @@ tasks. |
 
 ## Group Members
 1. **Dallin Moon** A02338740
-2. **Braden Tolman** A02364087a# 2610 Django + Vite Starting Point
+2. **Braden Tolman** A02364087# 2610 Django + Vite Starting Point
 This project serves as a starting point you to use as a starting point for Django applications that use Vite as the asset server for development. You are welcome to us this project for all of your assignments beginning with Module 5.
 
 ## Strategy

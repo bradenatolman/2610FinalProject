@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "django-vite-starter"
+name = "2610-Final-Project"
 version = "0.1.0"
 description = ""
-authors = ["Joseph Ditton <jditton.atomic@gmail.com>"]
+authors = ["Braden Tolman", "Dallin Moon"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
