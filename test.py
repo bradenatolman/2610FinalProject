@@ -1,4 +1,4 @@
-for i in range(10):
+for i in range(10,0, -1):
     print(i)
 
 print("It is reversed now!")
