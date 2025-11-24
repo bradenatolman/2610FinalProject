@@ -1,2 +1,2 @@
 # Don't push Node modules
-node_modules/
+client/node_modules/
