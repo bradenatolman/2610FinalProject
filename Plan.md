@@ -7,7 +7,6 @@
     * Button to switch view between
 * Design Plan
 
-	
 
 ### 2. **Upload Receipts**
 Users can upload pictures of receipts to keep a record of purchases. (Initially, this
@@ -99,6 +98,54 @@ CSS or Material UI to keep the app clean and consistent. |
 | **Meaningful backend and database use** | Django will handle all data storage,
 including user accounts, budgets, and receipt uploads, while also managing OCR
 tasks. |
+
+## Components
+
+Frontend:
+1. List view of purchases
+    - Edit mode and view mode
+2. Table view of monthly budget
+    - Edit mode and view mode
+3. Summary of past 12 months
+4. Add Categories
+    - Summarize categories
+    - Add categories
+4. Graph Visualization
+
+
+Backend
+1. OCR and uploading docs
+
+2. Graphing libraries
+
+
+Database Schema
+
+Categories
+
+id | category |
+
+Sub-Categories
+
+id | category_string | subcategory | 
+
+Purchases
+
+id | category_string | subcategory_string | spent | month | day | year | pic_id |
+
+Reciepts
+
+id | reciept |
+
+Budget
+
+id | category_string | subcategory_string | budget
+
+Month
+
+id | month | budget
+
+
 
 ## Group Members
 1. **Dallin Moon** A02338740
