@@ -74,8 +74,9 @@ class Budget(models.Model):
 # Purchase
 
 class Purchase(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    description = models.CharField(max_length=200)
+    categories = models.ManyToManyField(Category)
+    subcategories = models.ManyToManyField(SubCategory, blank=True)
     spent = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField()
     receipt = models.ForeignKey(Receipt, on_delete=models.SET_NULL, null=True, blank=True)
@@ -85,10 +86,14 @@ class Purchase(models.Model):
         ordering = ["-date", "-created_at"]
 
     def clean(self):
-        if self.subcategory and self.subcategory.category != self.category:
-            raise ValidationError(
-                "SubCategory must belong to the same Category."
-            )
+        # Make sure every subcategory belongs to one of the selected categories
+        for sub in self.subcategories.all():
+            if sub.category not in self.categories.all():
+                raise ValidationError(
+                    f"Subcategory '{sub}' does not belong to any selected category."
+                )
 
     def __str__(self):
-        return f"{self.category} - {self.subcategory}: {self.spent} on {self.date}"
+        cats = ", ".join([c.category for c in self.categories.all()])
+        subs = ", ".join([s.subcategory for s in self.subcategories.all()])
+        return f"{cats} — {subs}: {self.spent} on {self.date}"
