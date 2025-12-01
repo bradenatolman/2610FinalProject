@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import { TableView } from './tableView.jsx';
+// import { TableView } from './tableView.jsx';
 
 function App() {
 
@@ -23,7 +23,7 @@ function App() {
        <button onClick={logout}>Logout</button>
       </div>
       <div className="Page">
-        <TableView />
+        {/* <TableView /> */}
       </div>
       
     </>
