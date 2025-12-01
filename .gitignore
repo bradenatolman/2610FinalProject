@@ -1,2 +1,3 @@
 # Don't push Node modules
 client/node_modules/
+_server/core/migrations

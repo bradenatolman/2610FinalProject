@@ -17,10 +17,16 @@ function App() {
     }
   }
 
+  async function enterPurchase() {
+    // Functionality to enter a purchase
+  }
+
   return (
     <>
       <div className="Navbar">
+       <button onClick={enterPurchase}>Enter Purchase</button>
        <button onClick={logout}>Logout</button>
+
       </div>
       <div className="Page">
         {/* <TableView /> */}
