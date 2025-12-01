@@ -23,16 +23,33 @@ export function TableView() {
     }
 
     useEffect(() => {
+        console.log("Fetching table info for", month, year);
         getTableInfo();
     }, [month])
+
+    function updateMonth(delta) {
+        return () => {
+            let newMonth = month + delta;
+            let newYear = year;
+            if (newMonth < 1) {
+                newMonth = 12;
+                newYear -= 1;
+            } else if (newMonth > 12) {
+                newMonth = 1;
+                newYear += 1;
+            }
+            setMonth(newMonth);
+            setYear(newYear);
+        }
+    }
 
     return (
          <div>  
             <div className="title-month">
                 <h1> 
-                    <span onClick={() => setMonth(month+1)}> 〈 </span>
+                    <span onClick={updateMonth(-1)}> 〈 </span>
                     {monthName} {year}
-                    <span> 〉</span></h1>
+                    <span onClick={updateMonth(1)}> 〉</span></h1>
             </div>
             <div className="categories-grid">
                 {categories.map(cat => {

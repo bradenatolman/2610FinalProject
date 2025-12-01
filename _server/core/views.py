@@ -39,18 +39,12 @@ def tableInfo(req, year, month):
 
     getMonth = Month.objects.filter(year=year, month=month).first()
     if not getMonth:
-        getMonth = Month(year=year, month=month, budget=0)
-        getMonth.save() 
-
-        base = Purchase(spent=0, date=datetime.date(year, month, 1), description="Base Entry-Do Not Delete")
-        base.save()
-        base.categories.set(Category.objects.all())
-        base.subcategories.set(SubCategory.objects.all())
-        base.save()
-
+        print("Creating base for", year, month)
+        getMonth = createBase(year, month)
+       
     base = Purchase.objects.filter(description="Base Entry-Do Not Delete", date=datetime.date(year, month, 1)).first()
-    categories = [model_to_dict(c) for c in Category.objects.all()]
-    subcategories = [model_to_dict(s) for s in SubCategory.objects.all()]
+    categories = [model_to_dict(c) for c in base.categories.all()]
+    subcategories = [model_to_dict(s) for s in base.subcategories.all()]
 
     temp_date = datetime.date(2000, month, 1)
     monthName = temp_date.strftime("%B")
@@ -59,7 +53,47 @@ def tableInfo(req, year, month):
         "monthName": monthName,
         "month": getMonth.month,
         "year": getMonth.year,
-        "budget": getMonth.budget,
+        "total_budget": getMonth.total_budget,
         "categories": categories, 
         "subcategories": subcategories
     })
+
+
+def createBase(year, month):
+    cats = []
+    subs = []
+
+    # Predefined Categories
+    categories = ["Income","Housing","Transportation","Food","Utilities","Savings",
+        "Entertainment","Miscellaneous"
+    ]
+    for cat in categories:
+        cat_obj, _ = Category.objects.get_or_create(category=cat)
+        cats.append(cat_obj)
+
+    # Predefined SubCategories
+    subcategories = {
+        "Housing": ["Rent"],
+        "Transportation": ["Gas", "Insurance"],
+        "Food": ["Groceries", "Dining Out", "Snacks"],
+        "Utilities": ["Electricity", "Water", "Internet", "Phone", "Gas"],
+        "Savings": ["Emergency Fund", "Retirement", "Investments"],
+        "Entertainment": ["Movies", "Concerts", "Hobbies"],
+        "Miscellaneous": ["Gifts", "Donations", "Subscriptions"]
+    }
+    for cat_name, subcat_list in subcategories.items():
+        cat_obj, _ = Category.objects.get_or_create(category=cat_name)
+        for subcat in subcat_list:
+            subcat_obj, _ = SubCategory.objects.get_or_create(subcategory=subcat, category=cat_obj)
+            subs.append(subcat_obj)
+
+    getMonth, _ = Month.objects.get_or_create(year=year, month=month, defaults={'total_budget': 0})
+
+    base, _ = Purchase.objects.get_or_create(
+        description="Base Entry-Do Not Delete",
+        date=datetime.date(year, month, 1),
+        defaults={'spent': 0}
+    )
+    base.categories.set(cats)
+    base.subcategories.set(subs)
+    return getMonth
