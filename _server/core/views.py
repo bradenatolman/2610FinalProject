@@ -53,16 +53,15 @@ def tableInfo(req, year, month):
 
 #GET
     if year == 0 or month == 0:
-        today = datetime.date.today()
-        year = today.year
-        month = today.month
+        year, month = getToday()
 
     getMonth = Month.objects.filter(year=year, month=month).first()
     if not getMonth:
-        print("Creating base for", year, month)
         getMonth = createBase(year, month)
        
     base = Purchase.objects.filter(description="Base Entry-Do Not Delete", date=datetime.date(year, month, 1)).first()
+    if base.categories.count() == 0 or base.subcategories.count() == 0:
+        createBase(year, month)
     categories = [model_to_dict(c) for c in base.categories.all()]
     subcategories = [model_to_dict(s) for s in base.subcategories.all()]
 
@@ -93,6 +92,7 @@ def createBase(year, month):
 
     # Predefined SubCategories
     subcategories = {
+        "Income": ["Salary"],
         "Housing": ["Rent"],
         "Transportation": ["Gas", "Insurance"],
         "Food": ["Groceries", "Dining Out", "Snacks"],
@@ -106,6 +106,13 @@ def createBase(year, month):
         for subcat in subcat_list:
             subcat_obj, _ = SubCategory.objects.get_or_create(subcategory=subcat, category=cat_obj)
             subs.append(subcat_obj)
+            #Add Budget to each subcategory with 0 amount
+            Budget.objects.get_or_create(
+                month=Month.objects.get_or_create(year=year, month=month)[0],
+                category=cat_obj,
+                subcategory=subcat_obj,
+                budget=0
+            )
 
     getMonth, _ = Month.objects.get_or_create(year=year, month=month, defaults={'total_budget': 0})
 
@@ -114,10 +121,14 @@ def createBase(year, month):
         date=datetime.date(year, month, 1),
         defaults={'spent': 0}
     )
+    # Add categories and subcategories to base purchase
     base.categories.set(cats)
     base.subcategories.set(subs)
     return getMonth
 
+def getToday():
+    today = datetime.date.today()
+    return today.year, today.month
 
 @login_required
 def purchases(req):
