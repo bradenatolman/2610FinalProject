@@ -1,7 +1,8 @@
 import "./tableView.css";
 import { useEffect, useState } from "react";
 
-export function TableView() {
+export function TableView(props) {
+    const { edit } = props;
     const [monthName, setMonthName] = useState("");
     const [month, setMonth] = useState(0);
     const [year, setYear] = useState(0);
@@ -20,6 +21,8 @@ export function TableView() {
         setMonthName(body.monthName);
         setCats(body.categories);
         setSubs(body.subcategories);
+
+        console.log(body);
     }
 
     useEffect(() => {
@@ -51,6 +54,7 @@ export function TableView() {
                     <span onClick={updateMonth(1)}> 〉</span>
                 </h1>
             </div>
+
             <div className="categories-grid">
                 {categories.map(cat => {
                     const subsForCat = subcategories.filter(s => s.categoryId === cat.id);
@@ -75,7 +79,7 @@ export function TableView() {
                                     </tbody>
                                 </table>
                             ) : (
-                                <button>Add Subcategory</button>
+                                (edit && <button>Add Subcategory</button>)
                             )}
                         </div>
                     );
