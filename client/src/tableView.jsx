@@ -23,7 +23,6 @@ export function TableView() {
     }
 
     useEffect(() => {
-        console.log("Fetching table info for", month, year);
         getTableInfo();
     }, [month])
 
@@ -49,7 +48,8 @@ export function TableView() {
                 <h1> 
                     <span onClick={updateMonth(-1)}> 〈 </span>
                     {monthName} {year}
-                    <span onClick={updateMonth(1)}> 〉</span></h1>
+                    <span onClick={updateMonth(1)}> 〉</span>
+                </h1>
             </div>
             <div className="categories-grid">
                 {categories.map(cat => {

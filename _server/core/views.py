@@ -29,6 +29,7 @@ def index(req):
 @login_required
 def tableInfo(req, year, month):
     if req.method == "POST":
+        print("POST request received in tableInfo - not implemented")
         return null
 
 #GET
@@ -39,13 +40,13 @@ def tableInfo(req, year, month):
 
     getMonth = Month.objects.filter(year=year, month=month).first()
     if not getMonth:
-        print("Creating base for", year, month)
         getMonth = createBase(year, month)
        
     base = Purchase.objects.filter(description="Base Entry-Do Not Delete", date=datetime.date(year, month, 1)).first()
+    if base.categories.count() == 0 or base.subcategories.count() == 0:
+        createBase(year, month)
     categories = [model_to_dict(c) for c in base.categories.all()]
     subcategories = [model_to_dict(s) for s in base.subcategories.all()]
-
     temp_date = datetime.date(2000, month, 1)
     monthName = temp_date.strftime("%B")
 

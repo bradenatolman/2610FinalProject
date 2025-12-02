@@ -23,6 +23,10 @@
     gap: 5rem;
 }
 
+.title-month span {
+    cursor: pointer;
+}
+
 
 
 
