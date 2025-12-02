@@ -53,9 +53,7 @@ def tableInfo(req, year, month):
 
 #GET
     if year == 0 or month == 0:
-        today = datetime.date.today()
-        year = today.year
-        month = today.month
+        year, month = getToday()
 
     getMonth = Month.objects.filter(year=year, month=month).first()
     if not getMonth:
@@ -128,6 +126,9 @@ def createBase(year, month):
     base.subcategories.set(subs)
     return getMonth
 
+def getToday():
+    today = datetime.date.today()
+    return today.year, today.month
 
 @login_required
 def purchases(req):
