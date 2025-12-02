@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import './App.css'
 // import { TableView } from './tableView.jsx';
+import { EnterPurchase } from './enterPurchase.jsx';
 
 function App() {
+  const [showEnterPurchase, setShowEnterPurchase] = useState(false);
+
+  async function enterPurchase() {
+    setShowEnterPurchase(true);
+  } 
 
   async function logout() {
     const res = await fetch("/registration/logout/", {
@@ -24,11 +30,15 @@ function App() {
   return (
     <>
       <div className="Navbar">
-       <button onClick={enterPurchase}>Enter Purchase</button>
+       <button onClick={() => setShowEnterPurchase(true)}>Enter Purchase</button>
        <button onClick={logout}>Logout</button>
-
       </div>
-      <div className="Page">
+      
+      {showEnterPurchase && <div className="EnterPurchase">
+        <EnterPurchase />
+      </div>}
+      
+      <div className="Page">  
         {/* <TableView /> */}
       </div>
       

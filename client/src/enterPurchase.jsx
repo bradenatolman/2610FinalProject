@@ -1,0 +1,148 @@
+import "./enterPurchase.css";
+import { useState, useEffect } from "react";
+
+export function EnterPurchase() {
+    const [categories, setCategories] = useState([]);
+    const [subcategories, setSubcategories] = useState([]);
+    // entries: array of { categoryId, subcategoryId, amount }
+    const [entries, setEntries] = useState([
+        { categoryId: null, subcategoryId: null, amount: "" }
+    ]);
+    const [date, setDate] = useState("");
+    const [notes, setNotes] = useState("");
+    const [statusMessage, setStatusMessage] = useState(null);
+
+    useEffect(() => {
+        async function fetchCategories() {
+            const res = await fetch("/categories/", {
+                credentials: "same-origin",
+            });
+            if (!res.ok) return;
+            const body = await res.json();
+            setCategories(body.categories || []);
+            setSubcategories(body.subcategories || []);
+        }
+        fetchCategories();
+    }, []);
+
+    function updateEntry(index, patch) {
+        setEntries(prev => prev.map((r, i) => i === index ? { ...r, ...patch } : r));
+    }
+
+    function addRow() {
+        setEntries(prev => [...prev, { categoryId: null, subcategoryId: null, amount: "" }]);
+    }
+
+    function removeRow(index) {
+        setEntries(prev => prev.filter((_, i) => i !== index));
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setStatusMessage(null);
+
+        // Validate entries
+        const prepared = entries
+            .map(r => ({
+                categoryId: r.categoryId ? parseInt(r.categoryId) : null,
+                subcategoryId: r.subcategoryId ? parseInt(r.subcategoryId) : null,
+                amount: r.amount === "" ? null : parseFloat(r.amount),
+                date: date || null,
+                notes
+            }))
+            .filter(r => r.categoryId !== null && r.amount !== null && r.date !== null);
+
+        if (prepared.length === 0) {
+            setStatusMessage("Please fill at least one valid entry with category, amount and date.");
+            return;
+        }
+
+        const res = await fetch("/purchases/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({ entries: prepared }),
+        });
+
+        const body = await res.json().catch(() => ({}));
+        if (res.ok || res.status === 207) {
+            if (body.errors && body.errors.length) {
+                setStatusMessage(`Created ${body.created.length} entries, ${body.errors.length} errors.`);
+            } else {
+                setStatusMessage("All entries created successfully.");
+            }
+            // reset form rows
+            setEntries([{ categoryId: null, subcategoryId: null, amount: "" }]);
+            setNotes("");
+        } else {
+            setStatusMessage(body.error || "Failed to create entries.");
+        }
+    }
+
+    return (
+        <div className="enter-purchase-form">
+            <h2>Enter Purchases (multiple)</h2>
+            <form onSubmit={handleSubmit}>
+                {entries.map((entry, idx) => (
+                    <div key={idx} className="entry-row">
+                        <label>
+                            Category:
+                            <select
+                                value={entry.categoryId || ""}
+                                onChange={e => {
+                                    updateEntry(idx, { categoryId: e.target.value ? parseInt(e.target.value) : null, subcategoryId: null });
+                                }}
+                                required
+                            >
+                                <option value="">Select category</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            Subcategory:
+                            <select
+                                value={entry.subcategoryId || ""}
+                                onChange={e => updateEntry(idx, { subcategoryId: e.target.value ? parseInt(e.target.value) : null })}
+                            >
+                                <option value="">(none)</option>
+                                {subcategories
+                                    .filter(sub => sub.categoryId === entry.categoryId)
+                                    .map(sub => (
+                                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                                    ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            Amount:
+                            <input type="number" step="0.01" value={entry.amount} onChange={e => updateEntry(idx, { amount: e.target.value })} required />
+                        </label>
+
+                        <button type="button" onClick={() => removeRow(idx)} className="remove-row">Remove</button>
+                    </div>
+                ))}
+
+                <div className="form-controls">
+                    <label>
+                        Date:
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+                    </label>
+                    <label>
+                        Notes:
+                        <textarea value={notes} onChange={e => setNotes(e.target.value)} />
+                    </label>
+                    <div className="buttons">
+                        <button type="button" onClick={addRow}>Add Row</button>
+                        <button type="submit">Submit Purchases</button>
+                    </div>
+                </div>
+                {statusMessage && <div className="status">{statusMessage}</div>}
+            </form>
+        </div>
+    );
+}
