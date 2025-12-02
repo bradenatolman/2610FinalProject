@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 # Category + SubCategory
@@ -38,8 +39,10 @@ class Receipt(models.Model):
 
 class Month(models.Model):
     year = models.IntegerField()
-    month = models.IntegerField()  # 1–12
-    budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    month = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(12)]
+    )
+    total_budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     class Meta:
         unique_together = ("year", "month")
@@ -53,6 +56,7 @@ class Month(models.Model):
 # Category/SubCategory Budgeting
 
 class Budget(models.Model):
+    month = models.ForeignKey(Month, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, null=True, blank=True)
     budget = models.DecimalField(max_digits=12, decimal_places=2)

@@ -1,0 +1,167 @@
+:root {
+    --table-bg: #ffffff;
+    --header-bg: #f4f6f8;
+    --header-color: #0f1724;
+    --text-color: #111827;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --stripe: #fbfdff;
+    --hover: #f1f5f9;
+    --radius: 8px;
+}
+
+
+.title-month {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.title-month h1 {
+    display: flex;
+    gap: 5rem;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Table */
+
+/* Container to allow horizontal scrolling on small screens */
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius);
+}
+
+/* Base table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background: var(--table-bg);
+    color: var(--text-color);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    font-size: 14px;
+}
+
+/* Caption */
+table caption {
+    text-align: left;
+    padding: 0.5rem 0;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+/* Cells */
+th,
+td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Header */
+thead th {
+    background: var(--header-bg);
+    color: var(--header-color);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Zebra striping */
+tbody tr:nth-child(even) {
+    background: var(--stripe);
+}
+
+/* Hover state */
+tbody tr:hover {
+    background: var(--hover);
+    transition: background-color 120ms ease;
+}
+
+/* Selected row helper class */
+tr.is-selected {
+    background: rgba(59, 130, 246, 0.08); /* subtle blue */
+}
+
+/* Small, subtle footers */
+tfoot td {
+    padding: 0.5rem 1rem;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+}
+
+/* Compact variant */
+.table--compact th,
+.table--compact td {
+    padding: 0.4rem 0.6rem;
+    font-size: 13px;
+}
+
+/* Bordered variant */
+.table--bordered {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.table--bordered th,
+.table--bordered td {
+    border-right: 1px solid var(--border);
+}
+.table--bordered th:last-child,
+.table--bordered td:last-child {
+    border-right: none;
+}
+
+/* Responsive tweaks */
+@media (max-width: 640px) {
+    th, td {
+        padding: 0.5rem 0.6rem;
+        font-size: 13px;
+    }
+
+    table caption {
+        font-size: 13px;
+    }
+}
+
+/* Accessibility: focus for keyboard users */
+tbody tr:focus-within,
+tbody tr:focus {
+    outline: 2px solid rgba(59,130,246,0.2);
+    outline-offset: -2px;
+}
+
+/* Utility: right/center align cells */
+td.is-right,
+th.is-right {
+    text-align: right;
+}
+td.is-center,
+th.is-center {
+    text-align: center;
+}
+
+
