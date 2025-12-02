@@ -3,6 +3,7 @@ import './App.css'
 import { TableView } from './tableView.jsx';
 
 function App() {
+  const [edit, setEdit] = useState(false);
 
   async function logout() {
     const res = await fetch("/registration/logout/", {
@@ -20,10 +21,11 @@ function App() {
   return (
     <>
       <div className="Navbar">
+        <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
       </div>
       <div className="Page">
-        <TableView />
+        <TableView edit={edit} />
       </div>
       
     </>
