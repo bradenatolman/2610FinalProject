@@ -9,26 +9,6 @@ export function TableView(props) {
     const [categories, setCats] = useState([])
     const [subcategories, setSubs] = useState([])
 
-
-    async function getTableInfo() {
-        const res = await fetch(`/tableInfo/${year}/${month}/`, {
-        credentials: "same-origin",
-        })
-
-        const body = await res.json();
-        setMonth(body.month);
-        setYear(body.year);
-        setMonthName(body.monthName);
-        setCats(body.categories);
-        setSubs(body.subcategories);
-
-        console.log(body);
-    }
-
-    useEffect(() => {
-        getTableInfo();
-    }, [month])
-
     function updateMonth(delta) {
         return () => {
             let newMonth = month + delta;
@@ -45,6 +25,32 @@ export function TableView(props) {
         }
     }
 
+    async function getTableInfo() {
+        const res = await fetch(`/tableInfo/${year}/${month}/`, {
+        credentials: "same-origin",
+        })
+
+        const body = await res.json();
+        setMonth(body.month);
+        setYear(body.year);
+        setMonthName(body.monthName);
+        setCats(body.categories);
+        setSubs(body.subcategories);
+
+        console.log(body);
+    }
+
+    // Changes Month and displays data for that month
+    useEffect(() => {
+        getTableInfo();
+    }, [month])
+
+    // Updates when edited
+    useEffect(() => {
+        
+    }, [categories, subcategories])
+
+
     return (
          <div>  
             <div className="title-month">
@@ -55,13 +61,12 @@ export function TableView(props) {
                 </h1>
             </div>
 
-            <div className="categories-grid">
+            <div className="table-container">
                 {categories.map(cat => {
                     const subsForCat = subcategories.filter(s => s.category === cat.id);
                     return (
-                        <div key={cat.id} className="category-cell">
-                            {subsForCat.length ? (
-                                <table>
+                        <div key={cat.id} className="category-table">
+                            <table>
                                     <thead>
                                         <tr>
                                             <th>{cat.category}</th>
@@ -69,18 +74,21 @@ export function TableView(props) {
                                             <th>Actual</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {subsForCat.map(sub => (
-                                            <tr key={sub.id}>
-                                                <td>{sub.subcategory}</td>
-                                                <td>{sub.amount ?? '-'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                (edit && <button>Add Subcategory</button>)
-                            )}
+                                    {subsForCat.length ? (
+                                            <tbody>
+                                                {subsForCat.map(sub => (
+                                                    <tr key={sub.id}>
+                                                        <td>{sub.subcategory}</td>
+                                                        <td>{sub.amount ?? '-'}</td>
+                                                        <td>{sub.actual ?? '-'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                    
+                                    ) : (
+                                        <tbody><tr><td>{edit ?(<button>Add Subcategory</button>) : '-'}</td><td>-</td><td>-</td></tr></tbody>
+                                    )}
+                             </table>
                         </div>
                     );
                 })}

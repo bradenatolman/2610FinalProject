@@ -19,7 +19,7 @@ function App() {
   }
 
   return (
-    <>
+    <div className="App">
       <div className="Navbar">
         <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
@@ -28,7 +28,7 @@ function App() {
         <TableView edit={edit} />
       </div>
       
-    </>
+    </div>
   )
 }
 
