@@ -74,6 +74,7 @@ def createBase(year, month):
 
     # Predefined SubCategories
     subcategories = {
+        "Income": ["Salary"],
         "Housing": ["Rent"],
         "Transportation": ["Gas", "Insurance"],
         "Food": ["Groceries", "Dining Out", "Snacks"],
@@ -87,6 +88,13 @@ def createBase(year, month):
         for subcat in subcat_list:
             subcat_obj, _ = SubCategory.objects.get_or_create(subcategory=subcat, category=cat_obj)
             subs.append(subcat_obj)
+            #Add Budget to each subcategory with 0 amount
+            Budget.objects.get_or_create(
+                month=Month.objects.get_or_create(year=year, month=month)[0],
+                category=cat_obj,
+                subcategory=subcat_obj,
+                budget=0
+            )
 
     getMonth, _ = Month.objects.get_or_create(year=year, month=month, defaults={'total_budget': 0})
 
@@ -95,6 +103,7 @@ def createBase(year, month):
         date=datetime.date(year, month, 1),
         defaults={'spent': 0}
     )
+    #Add categories and subcategories to base purchase
     base.categories.set(cats)
     base.subcategories.set(subs)
     return getMonth

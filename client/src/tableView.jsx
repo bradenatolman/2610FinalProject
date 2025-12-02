@@ -57,14 +57,14 @@ export function TableView(props) {
 
             <div className="categories-grid">
                 {categories.map(cat => {
-                    const subsForCat = subcategories.filter(s => s.categoryId === cat.id);
+                    const subsForCat = subcategories.filter(s => s.category === cat.id);
                     return (
                         <div key={cat.id} className="category-cell">
                             {subsForCat.length ? (
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>{cat.name}</th>
+                                            <th>{cat.category}</th>
                                             <th>Expected</th>
                                             <th>Actual</th>
                                         </tr>
@@ -72,7 +72,7 @@ export function TableView(props) {
                                     <tbody>
                                         {subsForCat.map(sub => (
                                             <tr key={sub.id}>
-                                                <td>{sub.name}</td>
+                                                <td>{sub.subcategory}</td>
                                                 <td>{sub.amount ?? '-'}</td>
                                             </tr>
                                         ))}
