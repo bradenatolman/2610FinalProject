@@ -30,7 +30,6 @@ function App() {
       </div>
       <div className="Page">
         {/* <TableView /> */}
-       <button onClick={logout}>Logout</button>
       </div>
       
     </>
