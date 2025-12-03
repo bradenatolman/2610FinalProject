@@ -7,6 +7,8 @@ import { CreateCategory } from './createCategory.jsx';
 function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(true);
+  const [edit, setEdit] = useState(false);
+
 
   async function logout() {
     const res = await fetch("/registration/logout/", {
@@ -22,10 +24,11 @@ function App() {
   }
 
   return (
-    <>
+    <div className="App">
       <div className="Navbar">
        <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
        <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
+       <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
       </div>
       
@@ -41,7 +44,7 @@ function App() {
         { <TableView /> }
       </div>
       
-    </>
+    </div>
   )
 }
 

@@ -23,6 +23,10 @@
     gap: 5rem;
 }
 
+.title-month span {
+    cursor: pointer;
+}
+
 
 
 
@@ -38,6 +42,13 @@
 
 
 /* Table */
+
+.table-container {
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 2rem;
+}
 
 /* Container to allow horizontal scrolling on small screens */
 .table-wrapper {
