@@ -9,6 +9,10 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rank = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ("user", "name")
 
     def __str__(self):
         return f"{self.user} → {self.name}"
