@@ -2,9 +2,11 @@ import { useState } from 'react'
 import './App.css'
 // import { TableView } from './tableView.jsx';
 import { EnterPurchase } from './enterPurchase.jsx';
+import { CreateCategory } from './createCategory.jsx';
 
 function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
+  const [showCreateCategory, setShowCreateCategory] = useState(true);
 
   async function logout() {
     const res = await fetch("/registration/logout/", {
@@ -22,12 +24,17 @@ function App() {
   return (
     <>
       <div className="Navbar">
-       <button onClick={() => setShowEnterPurchase(true)}>Enter Purchase</button>
+       <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
+       <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
        <button onClick={logout}>Logout</button>
       </div>
       
       {showEnterPurchase && <div className="EnterPurchase">
         <EnterPurchase />
+      </div>}
+
+      {showCreateCategory && <div className="CreateCategory">
+        <CreateCategory />
       </div>}
 
       <div className="Page">  
