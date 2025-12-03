@@ -29,22 +29,15 @@ def index(req):
 
 @login_required
 def categories(req):
-    # Return categories and subcategories for client-side forms
-    cats = [model_to_dict(c) for c in Category.objects.all()]
-    subs = [model_to_dict(s) for s in SubCategory.objects.all()]
-    # normalize keys to match front-end expectations
-    for c in cats:
-        c["id"] = c.pop("id")
-        c["name"] = c.pop("category")
-    for s in subs:
-        s["id"] = s.pop("id")
-        s["name"] = s.pop("subcategory")
-        s["categoryId"] = s.pop("category")
-        # model_to_dict gives a dict for the FK; make it id only
-        if isinstance(s["categoryId"], dict):
-            s["categoryId"] = s["categoryId"].get("id")
+    get_categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
+    return JsonResponse({"categories": get_categories})
 
-    return JsonResponse({"categories": cats, "subcategories": subs})
+@login_required
+def subCategories(req):
+    subs = SubCategory.objects.filter(category__user=req.user)
+    subcategories = [model_to_dict(s) for s in subs]
+    return JsonResponse({"subcategories": subcategories})
+
 
 @login_required
 def tableInfo(req, year, month):
@@ -65,26 +58,10 @@ def tableInfo(req, year, month):
 
     if not base or not getMonth:
         getMonth, base = createBase(req.user, year, month)
-    
-    # Gather categories and subcategories from base purchase items
-    items = purchaseItem.objects.filter(user=req.user, purchase=base)
-    category_ids = items.values_list("category", flat=True).distinct()
-    categories = Category.objects.filter(user=req.user, id__in=category_ids)
-    subcategory_ids = items.values_list("subcategory", flat=True).distinct()
-    subcategories = SubCategory.objects.filter(id__in=subcategory_ids)
 
-    categories = [model_to_dict(c) for c in categories]
-    subcategories = [model_to_dict(s) for s in subcategories]
-
-    # Add budget amounts to subcategories
-    for sub in subcategories:
-        budget = Budget.objects.get_or_create(
-            user=req.user,
-            month=getMonth,
-            category_id=sub["category"],
-            subcategory_id=sub["id"]
-        )[0]
-
+     # Use helper functions instead of calling views
+    categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
+    subcategories = [model_to_dict(s) for s in SubCategory.objects.filter(category__user=req.user)]
     # Get month name
     temp_date = datetime.date(2000, month, 1)
     monthName = temp_date.strftime("%B")
