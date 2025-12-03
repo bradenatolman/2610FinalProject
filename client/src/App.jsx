@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-// import { TableView } from './tableView.jsx';
+import { TableView } from './tableView.jsx';
 import { EnterPurchase } from './enterPurchase.jsx';
 import { CreateCategory } from './createCategory.jsx';
 
@@ -38,7 +38,7 @@ function App() {
       </div>}
 
       <div className="Page">  
-        {/* <TableView /> */}
+        { <TableView /> }
       </div>
       
     </>
