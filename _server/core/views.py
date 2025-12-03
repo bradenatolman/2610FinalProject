@@ -87,7 +87,7 @@ def createBase(year, month):
         "Entertainment","Miscellaneous"
     ]
     for cat in categories:
-        cat_obj, _ = Category.objects.get_or_create(category=cat)
+        cat_obj, _ = Category.objects.get_or_create(name=cat)
         cats.append(cat_obj)
 
     # Predefined SubCategories
@@ -102,9 +102,9 @@ def createBase(year, month):
         "Miscellaneous": ["Gifts", "Donations", "Subscriptions"]
     }
     for cat_name, subcat_list in subcategories.items():
-        cat_obj, _ = Category.objects.get_or_create(category=cat_name)
+        cat_obj, _ = Category.objects.get_or_create(name=cat_name)
         for subcat in subcat_list:
-            subcat_obj, _ = SubCategory.objects.get_or_create(subcategory=subcat, category=cat_obj)
+            subcat_obj, _ = SubCategory.objects.get_or_create(name=subcat, category=cat_obj)
             subs.append(subcat_obj)
             #Add Budget to each subcategory with 0 amount
             Budget.objects.get_or_create(
