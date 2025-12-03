@@ -18,11 +18,10 @@ class SubCategory(models.Model):
     name = models.CharField(max_length=100)
 
     class Meta:
-        unique_together = ("category", "subcategory")
+        unique_together = ("category", "name")
 
     def __str__(self):
-        return f"{self.category} → {self.subcategory}"
-
+        return f"{self.category} → {self.name}"
 
 # Month (Budget per month)
 
@@ -66,15 +65,6 @@ class Budget(models.Model):
 
 
 # Purchase
-
-
-class purchaseItem(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    subcategory = models.ForeignKey(SubCategory, blank=True, null=True, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-
 class Purchase(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.CharField(max_length=200)
@@ -95,6 +85,14 @@ class Purchase(models.Model):
                 )
 
     def __str__(self):
-        cats = ", ".join([c.category for c in self.categories.all()])
-        subs = ", ".join([s.subcategory for s in self.subcategories.all()])
-        return f"{cats} — {subs}: {self.spent} on {self.date}"
+        cats = ", ".join([c.name for c in self.categories.all()])
+        subs = ", ".join([s.name for s in self.subcategories.all()])
+        return f"{cats} — {subs}: {self.total} on {self.date}"
+
+
+class purchaseItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(SubCategory, blank=True, null=True, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
