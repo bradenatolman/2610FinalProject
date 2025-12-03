@@ -69,7 +69,7 @@ export function TableView(props) {
                             <table>
                                     <thead>
                                         <tr>
-                                            <th>{cat.category}</th>
+                                            <th>{cat.name}</th>
                                             <th>Expected</th>
                                             <th>Actual</th>
                                         </tr>
@@ -78,7 +78,7 @@ export function TableView(props) {
                                             <tbody>
                                                 {subsForCat.map(sub => (
                                                     <tr key={sub.id}>
-                                                        <td>{sub.subcategory}</td>
+                                                        <td>{sub.name}</td>
                                                         <td>{sub.amount ?? '-'}</td>
                                                         <td>{sub.actual ?? '-'}</td>
                                                     </tr>

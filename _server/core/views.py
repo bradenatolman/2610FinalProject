@@ -55,16 +55,37 @@ def tableInfo(req, year, month):
     if year == 0 or month == 0:
         year, month = getToday()
 
-    getMonth = Month.objects.filter(year=year, month=month).first()
-    if not getMonth:
-        getMonth = createBase(year, month)
+    getMonth = Month.objects.filter(user=req.user, year=year, month=month).first()
        
-    base = Purchase.objects.filter(description="Base Entry-Do Not Delete", date=datetime.date(year, month, 1)).first()
-    if base.categories.count() == 0 or base.subcategories.count() == 0:
-        createBase(year, month)
-    categories = [model_to_dict(c) for c in base.categories.all()]
-    subcategories = [model_to_dict(s) for s in base.subcategories.all()]
+    base = Purchase.objects.filter(
+        user=req.user, 
+        description="Base Entry-Do Not Delete",
+        date=datetime.date(year, month, 1)
+         ).first()
 
+    if not base or not getMonth:
+        getMonth, base = createBase(req.user, year, month)
+    
+    # Gather categories and subcategories from base purchase items
+    items = purchaseItem.objects.filter(user=req.user, purchase=base)
+    category_ids = items.values_list("category", flat=True).distinct()
+    categories = Category.objects.filter(id__in=category_ids)
+    subcategory_ids = items.values_list("subcategory", flat=True).distinct()
+    subcategories = SubCategory.objects.filter(id__in=subcategory_ids)
+
+    categories = [model_to_dict(c) for c in categories]
+    subcategories = [model_to_dict(s) for s in subcategories]
+
+    # Add budget amounts to subcategories
+    for sub in subcategories:
+        budget = Budget.objects.get_or_create(
+            user=req.user,
+            month=getMonth,
+            category_id=sub["category"],
+            subcategory_id=sub["id"]
+        )[0]
+
+    # Get month name
     temp_date = datetime.date(2000, month, 1)
     monthName = temp_date.strftime("%B")
 
@@ -78,17 +99,20 @@ def tableInfo(req, year, month):
     })
 
 
-def createBase(year, month):
-    cats = []
-    subs = []
+def createBase(user, year, month):
+    getMonth, _ = Month.objects.get_or_create(user=user, year=year, month=month, total_budget=0)
+    base, _ = Purchase.objects.get_or_create(
+        user=user,
+        description="Base Entry-Do Not Delete",
+        date=datetime.date(year, month, 1),
+        total=0,
+        pic=None,
+    )
 
     # Predefined Categories
     categories = ["Income","Housing","Transportation","Food","Utilities","Savings",
         "Entertainment","Miscellaneous"
     ]
-    for cat in categories:
-        cat_obj, _ = Category.objects.get_or_create(name=cat)
-        cats.append(cat_obj)
 
     # Predefined SubCategories
     subcategories = {
@@ -105,26 +129,23 @@ def createBase(year, month):
         cat_obj, _ = Category.objects.get_or_create(name=cat_name)
         for subcat in subcat_list:
             subcat_obj, _ = SubCategory.objects.get_or_create(name=subcat, category=cat_obj)
-            subs.append(subcat_obj)
             #Add Budget to each subcategory with 0 amount
             Budget.objects.get_or_create(
-                month=Month.objects.get_or_create(year=year, month=month)[0],
+                user=user,
+                month=getMonth,
                 category=cat_obj,
                 subcategory=subcat_obj,
                 budget=0
             )
-
-    getMonth, _ = Month.objects.get_or_create(year=year, month=month, defaults={'total_budget': 0})
-
-    base, _ = Purchase.objects.get_or_create(
-        description="Base Entry-Do Not Delete",
-        date=datetime.date(year, month, 1),
-        defaults={'spent': 0}
-    )
-    # Add categories and subcategories to base purchase
-    base.categories.set(cats)
-    base.subcategories.set(subs)
-    return getMonth
+            # Add categories and subcategories to item connected to base purchase
+            purchaseItem.objects.get_or_create(
+                user=user,
+                purchase=base,
+                category=cat_obj,
+                subcategory=subcat_obj,
+                amount=0
+            )
+    return getMonth, base
 
 def getToday():
     today = datetime.date.today()
