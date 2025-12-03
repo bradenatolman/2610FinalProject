@@ -29,8 +29,8 @@ export function CreateCategory() {
     }
 
     return (
-        <div className="CreateCategories">
-            <h2>Create Categories</h2>
+        <div className="CreateCategory">
+            <h2>Create Category</h2>
             <form onSubmit={handleSubmit}>
                 <label>Category Name:
                     <input
