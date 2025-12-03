@@ -2,12 +2,10 @@ import "./tableView.css";
 import { useEffect, useState } from "react";
 
 export function TableView(props) {
-    const { edit } = props;
+    const { edit, categories, subcategories, setCats, setSubs } = props;
     const [monthName, setMonthName] = useState("");
     const [month, setMonth] = useState(0);
     const [year, setYear] = useState(0);
-    const [categories, setCats] = useState([])
-    const [subcategories, setSubs] = useState([])
 
     function updateMonth(delta) {
         return () => {

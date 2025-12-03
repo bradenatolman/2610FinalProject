@@ -1,8 +1,8 @@
 import "./enterPurchase.css";
 import { useState, useEffect } from "react";
 
-export function CreateCategory() {
-    const [categories, setCategories] = useState([]);
+export function CreateCategory(props) {
+    const { categories, setCats } = props;
     const [categoryName, setCategoryName] = useState("");
 
     useEffect(() => {

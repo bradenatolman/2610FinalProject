@@ -9,6 +9,10 @@ function App() {
   const [showCreateCategory, setShowCreateCategory] = useState(true);
   const [edit, setEdit] = useState(false);
 
+  
+  const [categories, setCats] = useState([])
+  const [subcategories, setSubs] = useState([])
+
 
   async function logout() {
     const res = await fetch("/registration/logout/", {
@@ -33,15 +37,28 @@ function App() {
       </div>
       
       {showEnterPurchase && <div className="EnterPurchase">
-        <EnterPurchase />
+        <EnterPurchase 
+          categories={categories}
+          subcategories={subcategories}
+          edit={edit}
+        />
       </div>}
 
       {showCreateCategory && <div className="CreateCategory">
-        <CreateCategory />
+        <CreateCategory
+          categories={categories}
+          setCats={setCats}
+           />
       </div>}
 
       <div className="Page">  
-        { <TableView /> }
+        { <TableView
+          categories={categories}
+          subcategories={subcategories}
+          setCats={setCats}
+          setSubs={setSubs}
+          edit={edit}
+         /> }
       </div>
       
     </div>

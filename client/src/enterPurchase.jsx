@@ -1,9 +1,8 @@
 import "./enterPurchase.css";
 import { useState, useEffect } from "react";
 
-export function EnterPurchase() {
-    const [categories, setCategories] = useState([]);
-    const [subcategories, setSubcategories] = useState([]);
+export function EnterPurchase(props) {
+    const { categories, subcategories } = props;
     // entries: array of { categoryId, subcategoryId, amount }
     const [entries, setEntries] = useState([
         { categoryId: null, subcategoryId: null, amount: "" }
