@@ -23,18 +23,6 @@ class SubCategory(models.Model):
         return f"{self.category} → {self.subcategory}"
 
 
-
-# Receipt
-
-class Receipt(models.Model):
-    file = models.FileField(upload_to="receipts/", null=True, blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Receipt {self.id} uploaded {self.uploaded_at}"
-
-
-
 # Month (Budget per month)
 
 class Month(models.Model):
@@ -74,16 +62,20 @@ class Budget(models.Model):
         return f"{self.category}: {self.budget}"
 
 
-
 # Purchase
+
+
+class purchaseItem(models.Model):
+    description = models.CharField(max_length=200)
+    categories = models.ForeignKey(Category, on_delete=models.CASCADE)
+    subcategories = models.ForeignKey(SubCategory, blank=True, null=True, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
 
 class Purchase(models.Model):
     description = models.CharField(max_length=200)
-    categories = models.ManyToManyField(Category)
-    subcategories = models.ManyToManyField(SubCategory, blank=True)
     spent = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField()
-    receipt = models.ForeignKey(Receipt, on_delete=models.SET_NULL, null=True, blank=True)
+    item = models.ForeignKey(purchaseItem, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

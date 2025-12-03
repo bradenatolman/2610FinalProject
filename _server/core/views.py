@@ -6,7 +6,7 @@ import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.forms.models import model_to_dict
-from .models import Category, SubCategory, Receipt, Month, Budget, Purchase
+from .models import Category, SubCategory, purchaseItem, Month, Budget, Purchase
 
 # Load manifest when server launches
 MANIFEST = {}

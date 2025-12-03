@@ -6,10 +6,6 @@ import { EnterPurchase } from './enterPurchase.jsx';
 function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
 
-  async function enterPurchase() {
-    setShowEnterPurchase(true);
-  } 
-
   async function logout() {
     const res = await fetch("/registration/logout/", {
       credentials: "same-origin", // include cookies!
@@ -23,10 +19,6 @@ function App() {
     }
   }
 
-  async function enterPurchase() {
-    // Functionality to enter a purchase
-  }
-
   return (
     <>
       <div className="Navbar">
@@ -37,7 +29,7 @@ function App() {
       {showEnterPurchase && <div className="EnterPurchase">
         <EnterPurchase />
       </div>}
-      
+
       <div className="Page">  
         {/* <TableView /> */}
       </div>
