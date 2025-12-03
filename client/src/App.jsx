@@ -6,7 +6,7 @@ import { CreateCategory } from './createCategory.jsx';
 
 function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
-  const [showCreateCategory, setShowCreateCategory] = useState(true);
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [edit, setEdit] = useState(false);
 
   
