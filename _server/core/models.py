@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -6,7 +7,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 # Category + SubCategory
 
 class Category(models.Model):
-    category = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.category
@@ -14,7 +15,7 @@ class Category(models.Model):
 
 class SubCategory(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    subcategory = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
 
     class Meta:
         unique_together = ("category", "subcategory")
@@ -23,21 +24,10 @@ class SubCategory(models.Model):
         return f"{self.category} → {self.subcategory}"
 
 
-
-# Receipt
-
-class Receipt(models.Model):
-    file = models.FileField(upload_to="receipts/", null=True, blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Receipt {self.id} uploaded {self.uploaded_at}"
-
-
-
 # Month (Budget per month)
 
 class Month(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     year = models.IntegerField()
     month = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(12)]
@@ -56,6 +46,7 @@ class Month(models.Model):
 # Category/SubCategory Budgeting
 
 class Budget(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     month = models.ForeignKey(Month, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     subcategory = models.ForeignKey(SubCategory, on_delete=models.CASCADE, null=True, blank=True)
@@ -74,16 +65,22 @@ class Budget(models.Model):
         return f"{self.category}: {self.budget}"
 
 
-
 # Purchase
 
+
+class purchaseItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    subcategory = models.ForeignKey(SubCategory, blank=True, null=True, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+
 class Purchase(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.CharField(max_length=200)
-    categories = models.ManyToManyField(Category)
-    subcategories = models.ManyToManyField(SubCategory, blank=True)
-    spent = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField()
-    receipt = models.ForeignKey(Receipt, on_delete=models.SET_NULL, null=True, blank=True)
+    pic = models.FileField(upload_to="receipts/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
