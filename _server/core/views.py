@@ -49,7 +49,7 @@ def categories(req):
 @login_required
 def tableInfo(req, year, month):
     if req.method == "POST":
-        return null
+        return None
 
 #GET
     if year == 0 or month == 0:
