@@ -3,10 +3,12 @@ import './App.css'
 import { TableView } from './tableView.jsx';
 import { EnterPurchase } from './enterPurchase.jsx';
 import { CreateCategory } from './createCategory.jsx';
+import { CreateSubCat } from './createSubCat.jsx';
 
 function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [showCreateSubCat, setShowCreateSubCat] = useState(false);
   const [edit, setEdit] = useState(false);
 
   
@@ -32,6 +34,7 @@ function App() {
       <div className="Navbar">
        <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
        <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
+       <button onClick={() => setShowCreateSubCat(prev => !prev)}>Create SubCategory</button>
        <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
       </div>
@@ -48,6 +51,13 @@ function App() {
         <CreateCategory
           categories={categories}
           setCats={setCats}
+           />
+      </div>}
+
+      {showCreateSubCat && <div className="CreateSubCat">
+        <CreateSubCat
+          subcategories={subcategories}
+          setSubs={setSubs}
            />
       </div>}
 
