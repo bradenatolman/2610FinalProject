@@ -1,18 +1,19 @@
 import "./tableView.css";
+import { EditText, EditNum } from "./tableInput.jsx";
 import { useEffect, useState } from "react";
 
 export function TableView(props) {
     const { edit, categories, subcategories, setCats, setSubs } = props;
+    const [changed, setChanged] = useState(false);
     const [budgets, setBudgets] = useState({});
     const [actuals, setActuals] = useState({});
     const [monthName, setMonthName] = useState("");
-    const [month, setMonth] = useState(0);
-    const [year, setYear] = useState(0);
+    const [month, setMonth] = useState({month: 0, year: 0});
 
     function updateMonth(delta) {
         return () => {
-            let newMonth = month + delta;
-            let newYear = year;
+            let newMonth = month.month + delta;
+            let newYear = month.year;
             if (newMonth < 1) {
                 newMonth = 12;
                 newYear -= 1;
@@ -20,45 +21,38 @@ export function TableView(props) {
                 newMonth = 1;
                 newYear += 1;
             }
-            setMonth(newMonth);
-            setYear(newYear);
+            month.year = newYear;
+            month.month = newMonth;
+            setMonth({...month});
+            setChanged(!changed);
         }
     }
 
     async function getTableInfo() {
-        const res = await fetch(`/tableInfo/${year}/${month}/`, {
+        const res = await fetch(`/tableInfo/${month.year}/${month.month}/`, {
         credentials: "same-origin",
         })
 
         const body = await res.json();
         setMonth(body.month);
-        setYear(body.year);
         setMonthName(body.monthName);
         setCats(body.categories);
         setSubs(body.subcategories);
         setBudgets(body.budgets);
         setActuals(body.actuals);
-
-        console.log(body);
     }
 
     // Changes Month and displays data for that month
     useEffect(() => {
         getTableInfo();
-    }, [month])
-
-    // Updates when edited
-    useEffect(() => {
-        
-    }, [categories, subcategories])
-
+    }, [changed])
 
     return (
          <div>  
             <div className="title-month">
                 <h1> 
                     <span onClick={updateMonth(-1)}> 〈 </span>
-                    {monthName} {year}
+                    {monthName} {month.year}
                     <span onClick={updateMonth(1)}> 〉</span>
                 </h1>
             </div>
@@ -74,7 +68,7 @@ export function TableView(props) {
                     </thead>
                     <tbody>
                         <tr>
-                            <td>{budgets.total_budget || 0}</td>
+                            <td>{!edit ? budgets.total_budget : (<EditNum month={true} id={month.id} number={budgets.total_budget} changed={changed} setChanged={setChanged} />)}</td>
                             <td>
                                 {budgets.expected_total || 0}
                             </td>
@@ -94,7 +88,7 @@ export function TableView(props) {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>{cat.name}</th>
+                                        <th className="left">{!edit ? cat.name : (<EditText id={cat.id} type="cat" name={cat.name} changed={changed} setChanged={setChanged} />)}</th>
                                         <th>Expected</th>
                                         <th>Actual</th>
                                     </tr>
@@ -103,9 +97,9 @@ export function TableView(props) {
                                         <tbody>
                                             {subsForCat.map(sub => (
                                                 <tr key={sub.id}>
-                                                    <td>{sub.name}</td>
-                                                    <td>{budgets[`${sub.id}`] ?? '-'}</td>
-                                                    <td>{actuals[`${sub.id}`] ?? '-'}</td>
+                                                    <td className="left">{!edit ? sub.name : (<EditText id={sub.id} type="sub" name={sub.name} changed={changed} setChanged={setChanged} />)}</td>
+                                                    <td>{!edit ? budgets[`${sub.id}`] : (<EditNum number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} />)}</td>
+                                                    <td>{actuals[`${sub.id}`]}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -115,7 +109,7 @@ export function TableView(props) {
                                 )}
                                 <tfoot>
                                     <tr>
-                                        <td>Total</td>
+                                        <td className="left">Total</td>
                                         <td>{budgets[`${cat.id}`] || 0}</td>
                                         <td>{actuals[`${cat.id}`] || 0}</td>
                                     </tr>
