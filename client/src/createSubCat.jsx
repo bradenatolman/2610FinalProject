@@ -42,7 +42,7 @@ export function CreateSubCat(props) {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': cookie.parse(document.cookie).csrftoken },
-                body: JSON.stringify({ name,  })
+                body: JSON.stringify({ category, name })
             });
 
             const body = await res.json().catch(() => ({}));
