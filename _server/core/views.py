@@ -29,15 +29,51 @@ def index(req):
 
 @login_required
 def categories(req):
-    get_categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
-    return JsonResponse({"categories": get_categories})
+    if req.method == "POST":
+        # Expect JSON body: { "name": "Category Name" }
+        try:
+            payload = json.loads(req.body.decode("utf-8") or "{}")
+        except Exception:
+            payload = {}
+
+        name = payload.get("name") or req.POST.get("name")
+        if not name:
+            return JsonResponse({"error": "name is required"}, status=400)
+
+        # create category for this user, avoid duplicates
+        cat_obj, created = Category.objects.get_or_create(user=req.user, name=name)
+
+        # return the created category and the updated list
+        get_categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
+        return JsonResponse({"category": model_to_dict(cat_obj), "categories": get_categories}, status=201 if created else 200)
+    else:
+        get_categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
+        return JsonResponse({"categories": get_categories})
 
 @login_required
 def subCategories(req):
-    subs = SubCategory.objects.filter(category__user=req.user)
-    subcategories = [model_to_dict(s) for s in subs]
-    return JsonResponse({"subcategories": subcategories})
+    if req.method == "POST":
+        # Expect JSON body: { "name": "Category Name" }
+        try:
+            payload = json.loads(req.body.decode("utf-8") or "{}")
+        except Exception:
+            payload = {}
 
+        name = payload.get("name") or req.POST.get("name")
+        category = payload.get("category") or req.POST.get("category")
+        if not name or not category:
+            return JsonResponse({"error": "name and category are required"}, status=400)
+
+        # create category for this user, avoid duplicates
+        cat_obj, created = SubCategory.objects.get_or_create(user=req.user, name=name, category_id=category)
+
+        # return the created category and the updated list
+        get_subcategories = [model_to_dict(c) for c in SubCategory.objects.filter(user=req.user)]
+        return JsonResponse({"subcategory": model_to_dict(cat_obj), "subcategories": get_subcategories}, status=201 if created else 200)
+    else:
+        subs = SubCategory.objects.filter(category__user=req.user)
+        subcategories = [model_to_dict(s) for s in subs]
+        return JsonResponse({"subcategories": subcategories})
 
 @login_required
 def tableInfo(req, year, month):

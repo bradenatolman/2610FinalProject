@@ -22,10 +22,31 @@ export function CreateCategory(props) {
         const name = categoryName.trim();
         if (!name) return;
 
-        // For now: add locally for immediate feedback.
-        // Optionally POST to server here if you have an endpoint.
-        setCategories(prev => [...prev, { id: Date.now(), name }]);
-        setCategoryName("");
+        try {
+            const res = await fetch('/categories/', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+
+            const body = await res.json().catch(() => ({}));
+            if (res.ok) {
+                // Use returned list if provided, otherwise append created category
+                if (body.categories) {
+                    setCategories(body.categories);
+                } else if (body.category) {
+                    setCategories(prev => [...prev, body.category]);
+                }
+                setCategoryName("");
+            } else {
+                // handle server error (simple alert for now)
+                alert(body.error || 'Failed to create category');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Network error creating category');
+        }
     }
 
     return (
