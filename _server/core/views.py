@@ -70,11 +70,47 @@ def tableInfo(req, year, month):
         "monthName": monthName,
         "month": getMonth.month,
         "year": getMonth.year,
-        "total_budget": getMonth.total_budget,
+        "budgets": getBudgetDict(req.user, getMonth),
+        "actuals": getActualDict(req.user, getMonth),
         "categories": categories, 
         "subcategories": subcategories
     })
 
+def getActualDict(user, month):
+    purchases = Purchase.objects.filter(user=user, date__year=month.year, date__month=month.month)
+    actual_dict = {}
+    for p in purchases:
+        for item in purchaseItem.objects.filter(purchase=p):
+            # subcategory actuals
+            key = f"{item.subcategory.id}"
+            actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
+
+            # category actuals
+            key_cat = f"{item.category.id}"
+            actual_dict[key_cat] = actual_dict.get(key_cat, 0) + float(item.amount)
+
+            # total month actual
+            actual_dict["actual_total"] = actual_dict.get("actual_total", 0) + float(item.amount)
+    
+    return actual_dict
+
+def getBudgetDict(user, month):
+    budgets = Budget.objects.filter(user=user, month=month)
+    budget_dict = {}
+    for b in budgets:
+        # subcategory budgets
+        key = f"{b.subcategory.id}"
+        budget_dict[key] = float(b.budget)
+
+        # category budgets
+        key_cat = f"{b.category.id}"
+        budget_dict[key_cat] = budget_dict.get(key_cat, 0) + float(b.budget)
+
+        # total month budget and expected budget
+        budget_dict["total_budget"] = float(month.total_budget)
+        budget_dict["expected_total"] = budget_dict.get("expected_total", 0) + float(b.budget)
+    
+    return budget_dict
 
 def createBase(user, year, month):
     getMonth, _ = Month.objects.get_or_create(user=user, year=year, month=month, total_budget=0)
