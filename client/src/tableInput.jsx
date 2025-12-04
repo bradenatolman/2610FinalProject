@@ -41,7 +41,7 @@ export function EditText(props) {
 
 
 export function EditNum(props) {
-    const {month=false, id, number, changed, setChanged} = props;
+    const {month, id, number, changed, setChanged} = props;
     const [num, setNum] = useState(number);
 
   function handleSubmit(e) {

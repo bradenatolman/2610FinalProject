@@ -274,7 +274,7 @@ def change(req):
     elif obj_type == "sub":
         obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
     elif obj_type == "number":
-        obj = Budget.objects.filter(id=obj_id, user=req.user).first()
+        obj = Budget.objects.filter(subcategory__id=obj_id, user=req.user).first()
     else:
         return JsonResponse({"error": "Invalid type"}, status=400)
 
