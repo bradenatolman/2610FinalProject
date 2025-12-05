@@ -75,7 +75,7 @@ class Purchase(models.Model):
     description = models.CharField(max_length=200)
     total = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField()
-    pic = models.FileField(upload_to="receipts/", null=True, blank=True)
+    #pic = models.FileField(upload_to="receipts/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

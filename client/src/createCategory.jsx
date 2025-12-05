@@ -1,9 +1,10 @@
 import "./enterPurchase.css";
 import { useState, useEffect } from "react";
+import * as cookie from "cookie";
 
 export function CreateCategory(props) {
     const { categories, setCats } = props;
-    const [categoryName, setCategoryName] = useState("");
+    const [ categoryName , setCategoryName] = useState("");
 
     useEffect(() => {
         async function fetchCategories() {
@@ -12,7 +13,7 @@ export function CreateCategory(props) {
             });
             if (!res.ok) return;
             const body = await res.json();
-            setCategories(body.categories || []);
+            setCats(body.categories || []);
         }
         fetchCategories();
     }, []);
@@ -26,7 +27,7 @@ export function CreateCategory(props) {
             const res = await fetch('/categories/', {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': cookie.parse(document.cookie).csrftoken },
                 body: JSON.stringify({ name })
             });
 
@@ -34,9 +35,9 @@ export function CreateCategory(props) {
             if (res.ok) {
                 // Use returned list if provided, otherwise append created category
                 if (body.categories) {
-                    setCategories(body.categories);
+                    setCats(body.categories);
                 } else if (body.category) {
-                    setCategories(prev => [...prev, body.category]);
+                    setCats(prev => [...prev, body.category]);
                 }
                 setCategoryName("");
             } else {
