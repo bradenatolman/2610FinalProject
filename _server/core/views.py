@@ -109,13 +109,50 @@ def tableInfo(req, year, month):
 
     return JsonResponse({
         "monthName": monthName,
-        "month": getMonth.month,
-        "year": getMonth.year,
-        "total_budget": getMonth.total_budget,
+        "month": model_to_dict(getMonth),
+        "budgets": getBudgetDict(req, getMonth),
+        "actuals": getActualDict(req, getMonth),
         "categories": categories, 
         "subcategories": subcategories
     })
 
+@login_required
+def getActualDict(req, month):
+    purchases = Purchase.objects.filter(user=req.user, date__year=month.year, date__month=month.month)
+    actual_dict = {}
+    for p in purchases:
+        for item in purchaseItem.objects.filter(purchase=p):
+            # subcategory actuals
+            key = f"{item.subcategory.id}"
+            actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
+
+            # category actuals
+            key_cat = f"{item.category.id}"
+            actual_dict[key_cat] = actual_dict.get(key_cat, 0) + float(item.amount)
+
+            # total month actual
+            actual_dict["actual_total"] = actual_dict.get("actual_total", 0) + float(item.amount)
+    
+    return actual_dict
+
+@login_required
+def getBudgetDict(req, month):
+    budgets = Budget.objects.filter(user=req.user, month=month)
+    budget_dict = {}
+    for b in budgets:
+        # subcategory budgets
+        key = f"{b.subcategory.id}"
+        budget_dict[key] = float(b.budget)
+
+        # category budgets
+        key_cat = f"{b.category.id}"
+        budget_dict[key_cat] = budget_dict.get(key_cat, 0) + float(b.budget)
+
+        # total month budget and expected budget
+        budget_dict["total_budget"] = float(month.total_budget)
+        budget_dict["expected_total"] = budget_dict.get("expected_total", 0) + float(b.budget)
+    
+    return budget_dict
 
 def createBase(user, year, month):
     getMonth, _ = Month.objects.get_or_create(user=user, year=year, month=month, total_budget=0)
@@ -240,3 +277,39 @@ def purchases(req):
 
     status = 200 if not errors else 207
     return JsonResponse({"created": created, "errors": errors}, status=status)
+
+@login_required
+def change(req):
+    if req.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+
+    body = json.loads(req.body)
+    obj_type = body.get("type")
+    obj_id = body.get("id")
+    content = body.get("content")
+
+    if body.get("month"):
+        obj = Month.objects.filter(id=obj_id, user=req.user).first()
+        obj.total_budget = content
+        obj.save()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_number": content})
+    elif obj_type == "cat":
+        obj = Category.objects.filter(id=obj_id, user=req.user).first()
+    elif obj_type == "sub":
+        obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
+    elif obj_type == "number":
+        obj = Budget.objects.filter(subcategory__id=obj_id, user=req.user).first()
+    else:
+        return JsonResponse({"error": "Invalid type"}, status=400)
+
+    if not obj:
+        return JsonResponse({"error": "Object not found"}, status=404)
+
+    if body.get("type") == "number":
+        obj.budget = content
+        obj.save()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_number": content})
+    else:
+        obj.name = content
+        obj.save()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_name": content})
