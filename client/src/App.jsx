@@ -4,6 +4,7 @@ import { TableView } from './tableView.jsx';
 import { EnterPurchase } from './enterPurchase.jsx';
 import { CreateCategory } from './createCategory.jsx';
 import { CreateSubCat } from './createSubCat.jsx';
+import { ListView } from './listView.jsx';
 
 function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
@@ -14,6 +15,8 @@ function App() {
   
   const [categories, setCats] = useState([])
   const [subcategories, setSubs] = useState([])
+  const [showTable, setShowTable] = useState(true);
+  const [showList, setShowList] = useState(false);
 
 
   async function logout() {
@@ -32,6 +35,7 @@ function App() {
   return (
     <div className="App">
       <div className="Navbar">
+       <button onClick={() => {setShowTable(prev => !prev); setShowList(prev => !prev); setShowEnterPurchase(false); setShowCreateCategory(false); setShowCreateSubCat(false);}}>Switch View</button>
        <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
        <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
        <button onClick={() => setShowCreateSubCat(prev => !prev)}>Create SubCategory</button>
@@ -62,14 +66,21 @@ function App() {
            />
       </div>}
 
-      <div className="Page">  
-        { <TableView
+      <div className="Page">
+        { showTable && <TableView
           categories={categories}
           subcategories={subcategories}
           setCats={setCats}
           setSubs={setSubs}
           edit={edit}
-         /> }
+         /> 
+         || showList && <ListView 
+          categories={categories}
+          subcategories={subcategories}
+          setCats={setCats}
+          setSubs={setSubs}
+          edit={edit}
+          /> }
       </div>
       
     </div>
