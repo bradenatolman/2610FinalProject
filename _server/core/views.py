@@ -124,7 +124,6 @@ def createBase(user, year, month):
         description="Base Entry-Do Not Delete",
         date=datetime.date(year, month, 1),
         total=0,
-        pic=None,
     )
 
     # Predefined Categories
