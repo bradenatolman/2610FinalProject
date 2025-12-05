@@ -32,9 +32,9 @@ function App() {
   return (
     <div className="App">
       <div className="Navbar">
-       <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
-       <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
-       <button onClick={() => setShowCreateSubCat(prev => !prev)}>Create SubCategory</button>
+       <button onClick={() => {setShowEnterPurchase(prev => !prev); setShowCreateCategory(false); setShowCreateSubCat(false);}}>Enter Purchase</button>
+       <button onClick={() => {setShowCreateCategory(prev => !prev); setShowEnterPurchase(false); setShowCreateSubCat(false);}}>Create Category</button>
+       <button onClick={() => {setShowCreateSubCat(prev => !prev); setShowEnterPurchase(false); setShowCreateCategory(false);}}>Create SubCategory</button>
        <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
       </div>
