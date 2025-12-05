@@ -1,8 +1,10 @@
 import "./enterPurchase.css";
 import { useState, useEffect } from "react";
+import * as cookie from "cookie";
+
 
 export function EnterPurchase(props) {
-    const { categories, subcategories } = props;
+    const { categories, setCats, subcategories, setSubs } = props;
     // entries: array of { categoryId, subcategoryId, amount }
     const [entries, setEntries] = useState([
         { categoryId: null, subcategoryId: null, amount: "" }
@@ -18,10 +20,42 @@ export function EnterPurchase(props) {
             });
             if (!res.ok) return;
             const body = await res.json();
-            setCategories(body.categories || []);
-            setSubcategories(body.subcategories || []);
+            // Only update parent categories if server returned a non-empty list
+            if (Array.isArray(body.categories) && body.categories.length > 0) {
+                setCats(body.categories);
+            } else {
+                // Keep existing parent categories instead of clearing them
+                console.debug("/categories/ returned empty list; not overwriting parent categories");
+            }
         }
         fetchCategories();
+    }, []);
+    useEffect(() => {
+            async function fetchSubcategories() {
+                const res = await fetch("/subCategories/", {
+                    credentials: "same-origin",
+                });
+                if (!res.ok) return;
+                const body = await res.json();
+                // Only update parent subcategories if server returned a non-empty list
+                if (Array.isArray(body.subcategories) && body.subcategories.length > 0) {
+                    setSubs(body.subcategories);
+                } else {
+                    console.debug("/subCategories/ returned empty list; not overwriting parent subcategories");
+                }
+            }
+        fetchSubcategories();
+    }, []);
+    useEffect(() => {
+        async function getDate() {
+            const res = await fetch("/today/", {
+                credentials: "same-origin",
+            });
+            if (!res.ok) return;
+            const body = await res.json();
+            setDate(body.today || "");
+        }
+        getDate();
     }, []);
 
     function updateEntry(index, patch) {
@@ -60,6 +94,7 @@ export function EnterPurchase(props) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-CSRFToken": cookie.parse(document.cookie).csrftoken,
             },
             credentials: "same-origin",
             body: JSON.stringify({ entries: prepared }),
@@ -109,8 +144,11 @@ export function EnterPurchase(props) {
                                 onChange={e => updateEntry(idx, { subcategoryId: e.target.value ? parseInt(e.target.value) : null })}
                             >
                                 <option value="">(none)</option>
-                                {subcategories
-                                    .filter(sub => sub.categoryId === entry.categoryId)
+                                 {subcategories
+                                    .filter(sub => {
+                                        const subCat = sub.category;
+                                        return entry.categoryId != null && subCat === entry.categoryId;
+                                    })
                                     .map(sub => (
                                         <option key={sub.id} value={sub.id}>{sub.name}</option>
                                     ))}
@@ -137,7 +175,7 @@ export function EnterPurchase(props) {
                     </label>
                     <div className="buttons">
                         <button type="button" onClick={addRow}>Add Row</button>
-                        <button type="submit">Submit Purchases</button>
+                        <button type="submit" onClick={handleSubmit}>Submit Purchases</button>
                     </div>
                 </div>
                 {statusMessage && <div className="status">{statusMessage}</div>}

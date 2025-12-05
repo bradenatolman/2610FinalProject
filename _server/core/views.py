@@ -60,16 +60,21 @@ def subCategories(req):
             payload = {}
 
         name = payload.get("name") or req.POST.get("name")
-        category = payload.get("category") or req.POST.get("category")
-        if not name or not category:
-            return JsonResponse({"error": "name and category are required"}, status=400)
+        category_id = payload.get("categoryId") or payload.get("category") or req.POST.get("category") or req.POST.get("categoryId")
+        if not name or not category_id:
+            return JsonResponse({"error": "name and categoryId are required"}, status=400)
 
-        # create category for this user, avoid duplicates
-        cat_obj, created = SubCategory.objects.get_or_create(user=req.user, name=name, category_id=category)
+        # Ensure the category belongs to this user
+        cat = Category.objects.filter(user=req.user, id=category_id).first()
+        if not cat:
+            return JsonResponse({"error": "category not found or not allowed"}, status=404)
 
-        # return the created category and the updated list
-        get_subcategories = [model_to_dict(c) for c in SubCategory.objects.filter(user=req.user)]
-        return JsonResponse({"subcategory": model_to_dict(cat_obj), "subcategories": get_subcategories}, status=201 if created else 200)
+        # create subcategory (SubCategory model does not have a user field)
+        sub_obj, created = SubCategory.objects.get_or_create(name=name, category=cat)
+
+        # return the created subcategory and the updated list for this user's categories
+        get_subcategories = [model_to_dict(c) for c in SubCategory.objects.filter(category__user=req.user)]
+        return JsonResponse({"subcategory": model_to_dict(sub_obj), "subcategories": get_subcategories}, status=201 if created else 200)
     else:
         subs = SubCategory.objects.filter(category__user=req.user)
         subcategories = [model_to_dict(s) for s in subs]
@@ -163,6 +168,11 @@ def createBase(user, year, month):
 def getToday():
     today = datetime.date.today()
     return today.year, today.month, today.day
+
+@login_required
+def today(req):
+    today = datetime.date.today()
+    return JsonResponse({"today": today.isoformat()})
 
 @login_required
 def purchases(req):

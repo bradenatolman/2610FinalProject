@@ -42,8 +42,9 @@ function App() {
       {showEnterPurchase && <div className="EnterPurchase">
         <EnterPurchase 
           categories={categories}
+          setCats={setCats}
           subcategories={subcategories}
-          edit={edit}
+          setSubs={setSubs}
         />
       </div>}
 
