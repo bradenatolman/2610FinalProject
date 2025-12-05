@@ -193,7 +193,7 @@ def purchases(req):
             sub_id = entry.get("subcategoryId")
             amount = entry.get("amount")
             date_str = entry.get("date")
-            notes = entry.get("notes") or entry.get("description") or ""
+            notes = entry.get("notes")
 
             if amount is None or cat_id is None or not date_str:
                 raise ValueError("Missing required fields")
@@ -201,28 +201,43 @@ def purchases(req):
             date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
             # ensure month exists and base is created
-            getMonth = Month.objects.filter(year=date_obj.year, month=date_obj.month).first()
+            getMonth = Month.objects.filter(user=req.user, year=date_obj.year, month=date_obj.month).first()
             if not getMonth:
-                getMonth = createBase(date_obj.year, date_obj.month)
+                getMonth, _ = createBase(req.user, date_obj.year, date_obj.month)
 
+            # Create the purchase (model uses `total` and `user`)
             purchase = Purchase.objects.create(
+                user=req.user,
                 description=notes or "User Entry",
-                spent=amount,
+                total=amount,
                 date=date_obj
             )
 
-            # Attach category and optional subcategory
-            cat_obj = Category.objects.filter(id=cat_id).first()
-            if cat_obj:
-                purchase.categories.add(cat_obj)
+            # Attach as purchaseItem(s) linking purchase -> category/subcategory with amount
+            cat_obj = Category.objects.filter(user=req.user, id=cat_id).first()
+            if not cat_obj:
+                raise ValueError(f"Category id {cat_id} not found for user")
+
+            sub_obj = None
             if sub_id:
-                sub_obj = SubCategory.objects.filter(id=sub_id).first()
-                if sub_obj:
-                    purchase.subcategories.add(sub_obj)
+                sub_obj = SubCategory.objects.filter(id=sub_id, category=cat_obj).first()
+                if not sub_obj:
+                    raise ValueError(f"Subcategory id {sub_id} not found for category {cat_id}")
+
+            # create purchaseItem record
+            purchaseItem.objects.create(
+                user=req.user,
+                purchase=purchase,
+                category=cat_obj,
+                subcategory=sub_obj,
+                amount=amount
+            )
 
             created.append(model_to_dict(purchase))
         except Exception as e:
-            errors.append({"index": i, "error": str(e)})
+            import traceback as _tb
+            tb = _tb.format_exc()
+            errors.append({"index": i, "error": str(e), "trace": tb})
 
     status = 200 if not errors else 207
     return JsonResponse({"created": created, "errors": errors}, status=status)
