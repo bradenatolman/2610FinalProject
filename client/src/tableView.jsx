@@ -98,8 +98,8 @@ export function TableView(props) {
                                             {subsForCat.map(sub => (
                                                 <tr key={sub.id}>
                                                     <td className="left">{!edit ? sub.name : (<EditText id={sub.id} type="sub" name={sub.name} changed={changed} setChanged={setChanged} />)}</td>
-                                                    <td>{!edit ? budgets[`${sub.id}`] : (<EditNum number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} month={false} />)}</td>
-                                                    <td>{actuals[`${sub.id}`]}</td>
+                                                    <td>{!edit ? budgets[`${sub.id}`] : (<EditNum id={sub.id} number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} month={false} />)}</td>
+                                                    <td>{actuals[`${sub.id}`] || "-"}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

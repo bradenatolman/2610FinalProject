@@ -42,7 +42,7 @@ export function EditText(props) {
 
 export function EditNum(props) {
     const {month, id, number, changed, setChanged} = props;
-    const [num, setNum] = useState(number);
+    const [num, setNum] = useState(number || 0);
 
   function handleSubmit(e) {
     e.preventDefault();
