@@ -29,15 +29,56 @@ def index(req):
 
 @login_required
 def categories(req):
-    get_categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
-    return JsonResponse({"categories": get_categories})
+    if req.method == "POST":
+        # Expect JSON body: { "name": "Category Name" }
+        try:
+            payload = json.loads(req.body.decode("utf-8") or "{}")
+        except Exception:
+            payload = {}
+
+        name = payload.get("name") or req.POST.get("name")
+        if not name:
+            return JsonResponse({"error": "name is required"}, status=400)
+
+        # create category for this user, avoid duplicates
+        cat_obj, created = Category.objects.get_or_create(user=req.user, name=name)
+
+        # return the created category and the updated list
+        get_categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
+        return JsonResponse({"category": model_to_dict(cat_obj), "categories": get_categories}, status=201 if created else 200)
+    else:
+        get_categories = [model_to_dict(c) for c in Category.objects.filter(user=req.user)]
+        return JsonResponse({"categories": get_categories})
 
 @login_required
 def subCategories(req):
-    subs = SubCategory.objects.filter(category__user=req.user)
-    subcategories = [model_to_dict(s) for s in subs]
-    return JsonResponse({"subcategories": subcategories})
+    if req.method == "POST":
+        # Expect JSON body: { "name": "Category Name" }
+        try:
+            payload = json.loads(req.body.decode("utf-8") or "{}")
+        except Exception:
+            payload = {}
 
+        name = payload.get("name") or req.POST.get("name")
+        category_id = payload.get("categoryId") or payload.get("category") or req.POST.get("category") or req.POST.get("categoryId")
+        if not name or not category_id:
+            return JsonResponse({"error": "name and categoryId are required"}, status=400)
+
+        # Ensure the category belongs to this user
+        cat = Category.objects.filter(user=req.user, id=category_id).first()
+        if not cat:
+            return JsonResponse({"error": "category not found or not allowed"}, status=404)
+
+        # create subcategory (SubCategory model does not have a user field)
+        sub_obj, created = SubCategory.objects.get_or_create(name=name, category=cat)
+
+        # return the created subcategory and the updated list for this user's categories
+        get_subcategories = [model_to_dict(c) for c in SubCategory.objects.filter(category__user=req.user)]
+        return JsonResponse({"subcategory": model_to_dict(sub_obj), "subcategories": get_subcategories}, status=201 if created else 200)
+    else:
+        subs = SubCategory.objects.filter(category__user=req.user)
+        subcategories = [model_to_dict(s) for s in subs]
+        return JsonResponse({"subcategories": subcategories})
 
 @login_required
 def tableInfo(req, year, month):
@@ -83,7 +124,6 @@ def createBase(user, year, month):
         description="Base Entry-Do Not Delete",
         date=datetime.date(year, month, 1),
         total=0,
-        pic=None,
     )
 
     # Predefined Categories
@@ -129,6 +169,11 @@ def getToday():
     return today.year, today.month, today.day
 
 @login_required
+def today(req):
+    today = datetime.date.today()
+    return JsonResponse({"today": today.isoformat()})
+
+@login_required
 def purchases(req):
     # Accept batch purchase entries: creates Purchase objects and associates categories/subcategories
     if req.method != "POST":
@@ -147,7 +192,7 @@ def purchases(req):
             sub_id = entry.get("subcategoryId")
             amount = entry.get("amount")
             date_str = entry.get("date")
-            notes = entry.get("notes") or entry.get("description") or ""
+            notes = entry.get("notes")
 
             if amount is None or cat_id is None or not date_str:
                 raise ValueError("Missing required fields")
@@ -155,28 +200,43 @@ def purchases(req):
             date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
             # ensure month exists and base is created
-            getMonth = Month.objects.filter(year=date_obj.year, month=date_obj.month).first()
+            getMonth = Month.objects.filter(user=req.user, year=date_obj.year, month=date_obj.month).first()
             if not getMonth:
-                getMonth = createBase(date_obj.year, date_obj.month)
+                getMonth, _ = createBase(req.user, date_obj.year, date_obj.month)
 
+            # Create the purchase (model uses `total` and `user`)
             purchase = Purchase.objects.create(
+                user=req.user,
                 description=notes or "User Entry",
-                spent=amount,
+                total=amount,
                 date=date_obj
             )
 
-            # Attach category and optional subcategory
-            cat_obj = Category.objects.filter(id=cat_id).first()
-            if cat_obj:
-                purchase.categories.add(cat_obj)
+            # Attach as purchaseItem(s) linking purchase -> category/subcategory with amount
+            cat_obj = Category.objects.filter(user=req.user, id=cat_id).first()
+            if not cat_obj:
+                raise ValueError(f"Category id {cat_id} not found for user")
+
+            sub_obj = None
             if sub_id:
-                sub_obj = SubCategory.objects.filter(id=sub_id).first()
-                if sub_obj:
-                    purchase.subcategories.add(sub_obj)
+                sub_obj = SubCategory.objects.filter(id=sub_id, category=cat_obj).first()
+                if not sub_obj:
+                    raise ValueError(f"Subcategory id {sub_id} not found for category {cat_id}")
+
+            # create purchaseItem record
+            purchaseItem.objects.create(
+                user=req.user,
+                purchase=purchase,
+                category=cat_obj,
+                subcategory=sub_obj,
+                amount=amount
+            )
 
             created.append(model_to_dict(purchase))
         except Exception as e:
-            errors.append({"index": i, "error": str(e)})
+            import traceback as _tb
+            tb = _tb.format_exc()
+            errors.append({"index": i, "error": str(e), "trace": tb})
 
     status = 200 if not errors else 207
     return JsonResponse({"created": created, "errors": errors}, status=status)
