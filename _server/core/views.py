@@ -213,43 +213,38 @@ def today(req):
 @login_required
 def purchases(req):
     # Accept batch purchase entries: creates Purchase objects and associates categories/subcategories
-    if req.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=405)
+    if req.method == "GET":
+        purchases = Purchase.objects.filter(user=req.user)
+        purchase_list = [model_to_dict(p) for p in purchases]
+        return JsonResponse({"purchases": purchase_list})
 
     payload = json.loads(req.body.decode("utf-8") or "{}")
     entries = payload.get("entries") or []
-    if not isinstance(entries, list):
-        return JsonResponse({"error": "entries must be a list"}, status=400)
+    if not isinstance(entries, list) or len(entries) == 0:
+        return JsonResponse({"error": "entries must not be empty"}, status=400)
 
-    created = []
+    # Optional top-level purchase fields: date, notes/description
+    top_date = payload.get("date")
+    top_notes = payload.get("notes") or payload.get("description")
+
+    # Validate entries first
+    validated = []
     errors = []
     for i, entry in enumerate(entries):
         try:
             cat_id = entry.get("categoryId")
             sub_id = entry.get("subcategoryId")
             amount = entry.get("amount")
-            date_str = entry.get("date")
-            notes = entry.get("notes")
+            date_str = entry.get("date") or top_date
+            notes = entry.get("notes") or top_notes
 
             if amount is None or cat_id is None or not date_str:
-                raise ValueError("Missing required fields")
+                raise ValueError("Each entry requires categoryId, amount, and date (or provide top-level date)")
 
+            # parse date
             date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
-            # ensure month exists and base is created
-            getMonth = Month.objects.filter(user=req.user, year=date_obj.year, month=date_obj.month).first()
-            if not getMonth:
-                getMonth, _ = createBase(req.user, date_obj.year, date_obj.month)
-
-            # Create the purchase (model uses `total` and `user`)
-            purchase = Purchase.objects.create(
-                user=req.user,
-                description=notes or "User Entry",
-                total=amount,
-                date=date_obj
-            )
-
-            # Attach as purchaseItem(s) linking purchase -> category/subcategory with amount
+            # check category belongs to user
             cat_obj = Category.objects.filter(user=req.user, id=cat_id).first()
             if not cat_obj:
                 raise ValueError(f"Category id {cat_id} not found for user")
@@ -260,23 +255,90 @@ def purchases(req):
                 if not sub_obj:
                     raise ValueError(f"Subcategory id {sub_id} not found for category {cat_id}")
 
-            # create purchaseItem record
-            purchaseItem.objects.create(
-                user=req.user,
-                purchase=purchase,
-                category=cat_obj,
-                subcategory=sub_obj,
-                amount=amount
-            )
-
-            created.append(model_to_dict(purchase))
+            validated.append({
+                "category": cat_obj,
+                "subcategory": sub_obj,
+                "amount": float(amount),
+                "date": date_obj,
+                "notes": notes,
+            })
         except Exception as e:
             import traceback as _tb
             tb = _tb.format_exc()
             errors.append({"index": i, "error": str(e), "trace": tb})
 
-    status = 200 if not errors else 207
-    return JsonResponse({"created": created, "errors": errors}, status=status)
+    if errors:
+        return JsonResponse({"errors": errors}, status=400)
+
+    # Ensure all entries share the same date (single purchase). If not, return error.
+    first_date = validated[0]["date"]
+    for v in validated:
+        if v["date"] != first_date:
+            return JsonResponse({"error": "All entries must share the same date for a single purchase. Group entries by date."}, status=400)
+
+    # Ensure month exists and base is created for the purchase date
+    getMonth = Month.objects.filter(user=req.user, year=first_date.year, month=first_date.month).first()
+    if not getMonth:
+        getMonth, _ = createBase(req.user, first_date.year, first_date.month)
+
+    # Create one Purchase for this batch
+    total_amount = sum([v["amount"] for v in validated])
+    purchase = Purchase.objects.create(
+        user=req.user,
+        description=validated[0].get("notes") or "User Entry",
+        total=total_amount,
+        date=first_date
+    )
+
+    # Create purchaseItem records
+    created_items = []
+    for v in validated:
+        it = purchaseItem.objects.create(
+            user=req.user,
+            purchase=purchase,
+            category=v["category"],
+            subcategory=v["subcategory"],
+            amount=v["amount"]
+        )
+        created_items.append({
+            "id": it.id,
+            "purchaseId": purchase.id,
+            "categoryId": it.category.id if it.category else None,
+            "categoryName": it.category.name if it.category else None,
+            "subcategoryId": it.subcategory.id if it.subcategory else None,
+            "subcategoryName": it.subcategory.name if it.subcategory else None,
+            "amount": float(it.amount)
+        })
+
+    # Build JSON-serializable purchase dict
+    purchase_dict = {
+        "id": purchase.id,
+        "description": purchase.description,
+        "total": float(purchase.total) if getattr(purchase, "total", None) is not None else None,
+        "date": purchase.date.isoformat() if getattr(purchase, "date", None) is not None else None,
+        "created_at": purchase.created_at.isoformat() if getattr(purchase, "created_at", None) is not None else None,
+        }
+
+    return JsonResponse({"created": purchase_dict, "items": created_items}, status=201)
+
+@login_required
+def purchase_items(req):
+    items = purchaseItem.objects.filter(user=req.user)
+    item_list = [model_to_dict(i) for i in items]
+    return JsonResponse({"purchaseItems": item_list})
+
+
+@login_required
+def purchase_detail(req, purchase_id):
+    # Support DELETE to remove a purchase (and its items via cascade)
+    if req.method == "DELETE":
+        p = Purchase.objects.filter(id=purchase_id, user=req.user).first()
+        if not p:
+            return JsonResponse({"error": "Purchase not found"}, status=404)
+        p.delete()
+        return JsonResponse({"success": True, "id": purchase_id})
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)
 
 @login_required
 def change(req):

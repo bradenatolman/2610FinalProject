@@ -5,13 +5,18 @@ import { EnterPurchase } from './enterPurchase.jsx';
 import { CreateCategory } from './createCategory.jsx';
 import { CreateSubCat } from './createSubCat.jsx';
 import { ListView } from './listView.jsx';
+import { EnterDataButtons } from './enterDataButtons.jsx';
+import { ChangeViews } from './changeViews.jsx';
 
 function App() {
+  const [edit, setEdit] = useState(false);
+  const [showDataButtons, setShowDataButtons] = useState(false);
+  const [showViewButtons, setShowViewButtons] = useState(false);
+
+
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [showCreateSubCat, setShowCreateSubCat] = useState(false);
-  const [edit, setEdit] = useState(false);
-
   
   const [categories, setCats] = useState([])
   const [subcategories, setSubs] = useState([])
@@ -35,20 +40,32 @@ function App() {
   return (
     <div className="App">
       <div className="Navbar">
-<<<<<<< HEAD
-       <button onClick={() => {setShowEnterPurchase(prev => !prev); setShowCreateCategory(false); setShowCreateSubCat(false);}}>Enter Purchase</button>
-       <button onClick={() => {setShowCreateCategory(prev => !prev); setShowEnterPurchase(false); setShowCreateSubCat(false);}}>Create Category</button>
-       <button onClick={() => {setShowCreateSubCat(prev => !prev); setShowEnterPurchase(false); setShowCreateCategory(false);}}>Create SubCategory</button>
-=======
-       <button onClick={() => {setShowTable(prev => !prev); setShowList(prev => !prev); setShowEnterPurchase(false); setShowCreateCategory(false); setShowCreateSubCat(false);}}>Switch View</button>
-       <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
-       <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
-       <button onClick={() => setShowCreateSubCat(prev => !prev)}>Create SubCategory</button>
->>>>>>> 1cd98e4 (List view button added. Basics of view created. Need to fix so it lists all purchases with their respective category and subcategory. Will list purchase and all items in that purchase.)
+      
+       <button onClick={() => setShowViewButtons(prev => !prev)}>Views</button>
+       {showViewButtons && <ChangeViews
+        setShowTable={setShowTable}
+        setShowList={setShowList}
+        setShowEnterPurchase={setShowEnterPurchase}
+        setShowCreateCategory={setShowCreateCategory}
+        setShowCreateSubCat={setShowCreateSubCat}
+       />}
+
+      
+       <button onClick={() => setShowDataButtons(prev => !prev)}>Enter Data</button>
+       {showDataButtons && <EnterDataButtons
+        setShowTable={setShowTable}
+        setShowList={setShowList}
+        setShowEnterPurchase={setShowEnterPurchase}
+        setShowCreateCategory={setShowCreateCategory}
+        setShowCreateSubCat={setShowCreateSubCat}
+       />}
+       
+       
        <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
       </div>
       
+
       {showEnterPurchase && <div className="EnterPurchase">
         <EnterPurchase 
           categories={categories}
@@ -80,7 +97,8 @@ function App() {
           setSubs={setSubs}
           edit={edit}
          /> 
-         || showList && <ListView 
+        }
+         { showList && <ListView 
           categories={categories}
           subcategories={subcategories}
           setCats={setCats}
