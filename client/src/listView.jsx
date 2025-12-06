@@ -9,61 +9,68 @@ export function ListView(props) {
     const [ year, setYear ] = useState(new Date().getFullYear());
     const [ month, setMonth ] = useState(new Date().getMonth() + 1); // Months are 0-indexed
 
+    // reloadData fetches purchases and purchaseItems and updates state
+    async function reloadData() {
+        try {
+            const resP = await fetch(`/purchases/`, { credentials: "same-origin" });
+            if (resP.ok) {
+                const body = await resP.json();
+                const raw = body.purchases || [];
+                raw.sort((a, b) => {
+                    const da = a.date ? new Date(a.date) : new Date(0);
+                    const db = b.date ? new Date(b.date) : new Date(0);
+                    return db - da;
+                });
+                const filtered = raw.filter(p => p.total != 0);
+                setPurchases(filtered || []);
+            }
+
+            const resI = await fetch(`/purchaseItems/`, { credentials: "same-origin" });
+            if (resI.ok) {
+                const body = await resI.json();
+                const raw = body.purchaseItems || [];
+                const filtered = raw.filter(e => e.amount != 0);
+                setPurchaseItems(filtered || []);
+            }
+        } catch (err) {
+            console.error("Failed to reload purchases/items:", err);
+        }
+    }
+
     useEffect(() => {
-        async function fetchPurchases() {
-            const res = await fetch(`/purchases/`, {
-                credentials: "same-origin",
-            });
-            if (!res.ok) return;
-            const body = await res.json();
-            const raw = body.purchases || [];
-            // sort purchases by date descending (newest first). Guard against missing dates.
-            raw.sort((a, b) => {
-                const da = a.date ? new Date(a.date) : new Date(0);
-                const db = b.date ? new Date(b.date) : new Date(0);
-                return db - da;
-            });
-            const filtered = raw.filter(p => p.total != 0);
-            console.log("Fetched purchases:", filtered);
-            setPurchases(filtered || []);
-        }
-        async function fetchPurchaseItems() {
-            const res = await fetch(`/purchaseItems/`, {
-                credentials: "same-origin",
-            });
-            if (!res.ok) return;
-            const body = await res.json();
-            const raw = body.purchaseItems || [];
-            // Optionally, sort purchase items if needed
-            const filtered = raw.filter(e => e.amount != 0);
-            console.log("Fetched purchase items:", filtered);
-            setPurchaseItems(filtered || []);
-        }
-        fetchPurchases();
-        fetchPurchaseItems();
+        reloadData();
     }, []);
 
     function handleEdit(purchaseId) {
         // Implement edit functionality here
     }
 
-    function handleDelete(purchaseId) {
-        if (!window.confirm("Delete this purchase and all its items?")) return;
+    function handleDelete(purchaseId, type) {
         (async () => {
             try {
-                const res = await fetch(`/purchases/${purchaseId}/`, {
-                    method: "DELETE",
-                    credentials: "same-origin",
-                    headers: { "X-CSRFToken": cookie.parse(document.cookie).csrftoken }
-                });
+                let res;
+                if (type === "purchase") {
+                    if (!window.confirm("Delete this purchase and all its items?")) return;
+                    res = await fetch(`/purchases/${purchaseId}/`, {
+                        method: "DELETE",
+                        credentials: "same-origin",
+                        headers: { "X-CSRFToken": cookie.parse(document.cookie).csrftoken }
+                    });
+                }else {
+                    if (!window.confirm("Delete this entry?")) return;
+                    res = await fetch(`/purchaseItems/${purchaseId}/`, {
+                        method: "DELETE",
+                        credentials: "same-origin",
+                        headers: { "X-CSRFToken": cookie.parse(document.cookie).csrftoken }
+                    });
+                }
                 if (!res.ok) {
                     const body = await res.json().catch(() => ({}));
                     alert(body.error || "Failed to delete purchase");
                     return;
                 }
-                // remove from local state
-                setPurchases(prev => prev.filter(p => p.id !== purchaseId));
-                setPurchaseItems(prev => prev.filter(pi => (pi.purchaseId ? pi.purchaseId !== purchaseId : pi.purchase !== purchaseId)));
+                // refresh data from server to reflect deletion
+                await reloadData();
             } catch (err) {
                 console.error(err);
                 alert('Network error deleting purchase');
@@ -91,9 +98,9 @@ export function ListView(props) {
                                 <td>{purchase.date}</td>
                                 <td>{purchase.description}</td>
                                 <td>{purchase.total}</td>
-                                {edit && <td>
+                                    {edit && <td>
                                     <button onClick={() => handleEdit(purchase.id)}>Edit</button>
-                                    <button onClick={() => handleDelete(purchase.id)}>Delete</button>
+                                    <button onClick={() => handleDelete(purchase.id, "purchase")}>Delete</button>
                                 </td>}
                             </tr>
                             {purchaseItems
@@ -112,8 +119,8 @@ export function ListView(props) {
                                             <td>{catName}{subName ? ` / ${subName}` : ""}</td>
                                             <td>{amount}</td>
                                             {edit && <td>
-                                                <button onClick={() => handleEdit(purchase.id)}>Edit</button>
-                                                <button onClick={() => handleDelete(purchase.id)}>Delete</button>
+                                                <button onClick={() => handleEdit(pi.id)}>Edit</button>
+                                                <button onClick={() => handleDelete(pi.id, "purchaseItem")}>Delete</button>
                                             </td>}
                                         </tr>
                                     )

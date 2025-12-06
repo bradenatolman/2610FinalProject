@@ -6,6 +6,8 @@ import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.forms.models import model_to_dict
+from django.db import transaction
+from decimal import Decimal
 from .models import Category, SubCategory, purchaseItem, Month, Budget, Purchase
 
 # Load manifest when server launches
@@ -337,6 +339,25 @@ def purchase_detail(req, purchase_id):
             return JsonResponse({"error": "Purchase not found"}, status=404)
         p.delete()
         return JsonResponse({"success": True, "id": purchase_id})
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+@login_required
+def purchase_item_detail(req, item_id):
+    # DELETE a single purchaseItem and update its parent Purchase total
+    if req.method == "DELETE":
+        it = purchaseItem.objects.filter(id=item_id, user=req.user).first()
+        if not it:
+            return JsonResponse({"error": "Item not found"}, status=404)
+        with transaction.atomic():
+            parent = Purchase.objects.filter(id=it.purchase.id, user=req.user).first()
+            amount = float(it.amount) if getattr(it, "amount", None) is not None else 0
+            it.delete()
+            if parent:
+                parent.total = parent.total - Decimal(amount)
+                parent.save()
+        return JsonResponse({"success": True, "id": item_id})
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
