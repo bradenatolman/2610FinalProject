@@ -4,6 +4,7 @@ import { TableView } from './tableView.jsx';
 import { EnterPurchase } from './enterPurchase.jsx';
 import { CreateCategory } from './createCategory.jsx';
 import { CreateSubCat } from './createSubCat.jsx';
+import { ListView } from './listView.jsx';
 
 function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
@@ -14,6 +15,8 @@ function App() {
   
   const [categories, setCats] = useState([])
   const [subcategories, setSubs] = useState([])
+  const [showTable, setShowTable] = useState(true);
+  const [showList, setShowList] = useState(false);
 
 
   async function logout() {
@@ -32,9 +35,16 @@ function App() {
   return (
     <div className="App">
       <div className="Navbar">
+<<<<<<< HEAD
        <button onClick={() => {setShowEnterPurchase(prev => !prev); setShowCreateCategory(false); setShowCreateSubCat(false);}}>Enter Purchase</button>
        <button onClick={() => {setShowCreateCategory(prev => !prev); setShowEnterPurchase(false); setShowCreateSubCat(false);}}>Create Category</button>
        <button onClick={() => {setShowCreateSubCat(prev => !prev); setShowEnterPurchase(false); setShowCreateCategory(false);}}>Create SubCategory</button>
+=======
+       <button onClick={() => {setShowTable(prev => !prev); setShowList(prev => !prev); setShowEnterPurchase(false); setShowCreateCategory(false); setShowCreateSubCat(false);}}>Switch View</button>
+       <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
+       <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
+       <button onClick={() => setShowCreateSubCat(prev => !prev)}>Create SubCategory</button>
+>>>>>>> 1cd98e4 (List view button added. Basics of view created. Need to fix so it lists all purchases with their respective category and subcategory. Will list purchase and all items in that purchase.)
        <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
       </div>
@@ -62,14 +72,21 @@ function App() {
            />
       </div>}
 
-      <div className="Page">  
-        { <TableView
+      <div className="Page">
+        { showTable && <TableView
           categories={categories}
           subcategories={subcategories}
           setCats={setCats}
           setSubs={setSubs}
           edit={edit}
-         /> }
+         /> 
+         || showList && <ListView 
+          categories={categories}
+          subcategories={subcategories}
+          setCats={setCats}
+          setSubs={setSubs}
+          edit={edit}
+          /> }
       </div>
       
     </div>
