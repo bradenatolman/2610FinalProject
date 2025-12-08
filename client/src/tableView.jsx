@@ -8,6 +8,7 @@ export function TableView(props) {
     const [actuals, setActuals] = useState({});
     const [monthName, setMonthName] = useState("");
     const [month, setMonth] = useState({month: 0, year: 0});
+    const [showIncomeSummary, setShowIncomeSummary] = useState(false);
 
     function updateMonth(delta) {
         return () => {
@@ -26,6 +27,16 @@ export function TableView(props) {
             setChanged(!changed);
         }
     }
+
+    function red(a, b, green=false) {    
+        if (a-b <0) {
+            return "red";
+        }
+        if (green && a-b > 0) {
+            return "green";
+        }
+        return "black";
+    }    
 
     async function getTableInfo() {
         const res = await fetch(`/tableInfo/${month.year}/${month.month}/`, {
@@ -76,6 +87,25 @@ export function TableView(props) {
                             </td>
                         </tr>
                     </tbody>
+                    <tfoot>
+                        {showIncomeSummary && (
+                        <tr>
+                            <td>Income</td>
+                            <td>{budgets.income_expected || 0}</td>
+                            <td>{actuals.income_actual || "-"}</td>
+                        </tr>
+                        )}
+                        <tr>
+                            <td onClick={() => setShowIncomeSummary(!showIncomeSummary)}> <u>Difference</u></
+                            td>
+                            <td style={{color: red(budgets.income_expected, budgets.expected_total, true)}}>
+                                {(budgets.income_expected || 0) - (budgets.expected_total || 0)}
+                            </td>
+                            <td style={{color: red(actuals.income_actual, actuals.actual_total, true)}}>
+                                {(actuals.income_actual || 0) - (actuals.actual_total || 0)}
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
 
@@ -98,7 +128,9 @@ export function TableView(props) {
                                                 <tr key={sub.id}>
                                                     <td className="left">{!edit ? sub.name : (<EditText id={sub.id} type="sub" name={sub.name} changed={changed} setChanged={setChanged} />)}</td>
                                                     <td>{!edit ? budgets[`${sub.id}`] : (<EditNum id={sub.id} number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} month={month} ismonth={false} />)}</td>
-                                                    <td>{actuals[`${sub.id}`] || "-"}</td>
+                                                    
+                                                    { sub.category.name === 'Income' ? (<td style={{color: red(budgets[`${sub.id}`], actuals[`${sub.id}`])}}>
+                                                        {actuals[`${sub.id}`] || "-"}</td>) : (<td>{actuals[`${sub.id}`] || "-"}</td>)}
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -110,7 +142,8 @@ export function TableView(props) {
                                     <tr>
                                         <td className="left">Total</td>
                                         <td>{budgets[`${cat.id}`] || 0}</td>
-                                        <td>{actuals[`${cat.id}`] || 0}</td>
+                                        <td style={{color: red(budgets[`${cat.id}`], actuals[`${cat.id}`])}}>
+                                            {actuals[`${cat.id}`] || 0}</td>
                                     </tr>
                                 </tfoot>
                              </table>
