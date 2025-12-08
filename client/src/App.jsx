@@ -20,14 +20,12 @@ function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [showCreateSubCat, setShowCreateSubCat] = useState(false);
-  const [showView, setShowView] = useState(true);
-  const [edit, setEdit] = useState(false);
-
   
   const [categories, setCats] = useState([])
   const [subcategories, setSubs] = useState([])
   const [showTable, setShowTable] = useState(true);
   const [showList, setShowList] = useState(false);
+  const [showYear, setShowYear] = useState(false);
 
 
   async function logout() {
@@ -47,13 +45,11 @@ function App() {
     <div className="App">
       <div className="Navbar">
 
-        <button onClick={() => setShowView(prev => !prev)}> Year View </button>
-        <button onClick={() => setShowView(prev => !prev)}> Month View </button>
-
        <button onClick={() => setShowViewButtons(prev => !prev)}>Views</button>
        {showViewButtons && <ChangeViews
         setShowTable={setShowTable}
         setShowList={setShowList}
+        setShowYear={setShowYear}
         setShowEnterPurchase={setShowEnterPurchase}
         setShowCreateCategory={setShowCreateCategory}
         setShowCreateSubCat={setShowCreateSubCat}
@@ -118,7 +114,14 @@ function App() {
           edit={edit}
           changed={changed}
           /> }
+
+         { showYear && <YearView
+          showYear={showYear} 
+          />
+         } 
       </div>
+
+
       
     </div>
   )

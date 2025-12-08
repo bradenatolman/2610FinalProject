@@ -2,7 +2,7 @@ import "./tableView.css";
 import { useEffect, useState } from "react";
 
 export function YearView(props) {
-    const { showView } = props;
+    const { showYear } = props;
     const [year, setYear] = useState(2025);
     const [yearInfo, setYearInfo] = useState({missing_months: []});
     const [months, setMonths] = useState([]);
@@ -34,7 +34,7 @@ export function YearView(props) {
 
     useEffect(() => {
         getCurYear();
-    }, [showView])
+    }, [showYear])
 
     useEffect(() => {
         getYearInfo();
