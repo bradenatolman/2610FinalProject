@@ -399,8 +399,9 @@ def change(req):
     obj_type = body.get("type")
     obj_id = body.get("id")
     content = body.get("content")
+    month = body.get("month")
 
-    if body.get("month"):
+    if body.get("ismonth"):
         obj = Month.objects.filter(id=obj_id, user=req.user).first()
         obj.total_budget = content
         obj.save()
@@ -410,7 +411,10 @@ def change(req):
     elif obj_type == "sub":
         obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
     elif obj_type == "number":
-        obj = Budget.objects.filter(subcategory__id=obj_id, user=req.user).first()
+        month = Month.objects.filter(user=req.user, id=month.get("id")).first()
+        sub = SubCategory.objects.filter(id=obj_id).first()
+        cat = sub.category if sub else None
+        obj = Budget.objects.get_or_create(month=month, category= cat, subcategory=sub, user=req.user).first()
     else:
         return JsonResponse({"error": "Invalid type"}, status=400)
 

@@ -67,7 +67,7 @@ export function TableView(props) {
                     </thead>
                     <tbody>
                         <tr>
-                            <td>{!edit ? budgets.total_budget : (<EditNum month={true} id={month.id} number={budgets.total_budget} changed={changed} setChanged={setChanged} />)}</td>
+                            <td>{!edit ? budgets.total_budget : (<EditNum ismonth={true} month={month} id={month.id} number={budgets.total_budget} changed={changed} setChanged={setChanged} />)}</td>
                             <td>
                                 {budgets.expected_total || 0}
                             </td>
@@ -97,7 +97,7 @@ export function TableView(props) {
                                             {subsForCat.map(sub => (
                                                 <tr key={sub.id}>
                                                     <td className="left">{!edit ? sub.name : (<EditText id={sub.id} type="sub" name={sub.name} changed={changed} setChanged={setChanged} />)}</td>
-                                                    <td>{!edit ? budgets[`${sub.id}`] : (<EditNum id={sub.id} number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} month={false} />)}</td>
+                                                    <td>{!edit ? budgets[`${sub.id}`] : (<EditNum id={sub.id} number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} month={month} ismonth={false} />)}</td>
                                                     <td>{actuals[`${sub.id}`] || "-"}</td>
                                                 </tr>
                                             ))}
