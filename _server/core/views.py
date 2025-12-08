@@ -211,6 +211,31 @@ def today(req):
     return JsonResponse({"today": today.isoformat()})
 
 @login_required
+def yearInfo(req, year):
+    if req.method == "POST":
+        return None
+
+    #GET
+    getMonthObjs = Month.objects.filter(user=req.user, year=year).order_by('month')
+    monthData = []
+    for monthObj in getMonthObjs:
+        monthName = datetime.date(2000, monthObj.month, 1).strftime("%B")
+        monthData.append({
+            "month": model_to_dict(monthObj),
+            "monthName": monthName,
+            "budgets": getBudgetDict(req, monthObj),
+            "actuals": getActualDict(req, monthObj)
+        })
+
+    return JsonResponse({
+        "year": year,
+        "months": monthData,
+        "missing_months": [datetime.date(2000, m, 1).strftime("%B") for m in range(1,13) if m not in [mo.month for mo in getMonthObjs]],
+        "expected_total": sum([md["budgets"].get("total_budget", 0) for md in monthData]),
+        "actual_total": sum([md["actuals"].get("actual_total", 0) for md in monthData])
+    })
+
+@login_required
 def purchases(req):
     # Accept batch purchase entries: creates Purchase objects and associates categories/subcategories
     if req.method != "POST":
