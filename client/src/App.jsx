@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import { TableView } from './tableView.jsx';
+import { YearView } from './yearView.jsx';
 import { EnterPurchase } from './enterPurchase.jsx';
 import { CreateCategory } from './createCategory.jsx';
 import { CreateSubCat } from './createSubCat.jsx';
@@ -9,6 +10,7 @@ function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [showCreateSubCat, setShowCreateSubCat] = useState(false);
+  const [showView, setShowView] = useState(true);
   const [edit, setEdit] = useState(false);
 
   
@@ -32,6 +34,8 @@ function App() {
   return (
     <div className="App">
       <div className="Navbar">
+        <button onClick={() => setShowView(prev => !prev)}> Year View </button>
+        <button onClick={() => setShowView(prev => !prev)}> Month View </button>
        <button onClick={() => setShowEnterPurchase(prev => !prev)}>Enter Purchase</button>
        <button onClick={() => setShowCreateCategory(prev => !prev)}>Create Category</button>
        <button onClick={() => setShowCreateSubCat(prev => !prev)}>Create SubCategory</button>
@@ -63,13 +67,15 @@ function App() {
       </div>}
 
       <div className="Page">  
-        { <TableView
+        { showView && <TableView
           categories={categories}
           subcategories={subcategories}
           setCats={setCats}
           setSubs={setSubs}
           edit={edit}
          /> }
+
+         { !showView && <YearView showView={showView} /> }
       </div>
       
     </div>

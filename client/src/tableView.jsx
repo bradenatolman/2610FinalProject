@@ -62,7 +62,7 @@ export function TableView(props) {
                     <thead>
                         <tr>
                             <th>Monthly Budget</th>
-                            <th>Planned</th>
+                            <th>Expected</th>
                             <th>Actual</th>
                         </tr>
                     </thead>
