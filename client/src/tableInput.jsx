@@ -41,7 +41,7 @@ export function EditText(props) {
 
 
 export function EditNum(props) {
-    const {month, id, number, changed, setChanged} = props;
+    const {ismonth, month, id, number, changed, setChanged} = props;
     const [num, setNum] = useState(number || 0);
 
   function handleSubmit(e) {
@@ -53,7 +53,7 @@ export function EditNum(props) {
     const res = await fetch(`/change/`, {
       method: "POST",
       credentials: "same-origin",
-      body: JSON.stringify({ content: num, id, type: 'number', month }), 
+      body: JSON.stringify({ content: num, id, type: 'number', month, ismonth}), 
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": cookie.parse(document.cookie).csrftoken,

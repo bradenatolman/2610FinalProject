@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.forms.models import model_to_dict
 from django.db import transaction
 from decimal import Decimal
-from .models import Category, SubCategory, purchaseItem, Month, Budget, Purchase
+from .models import Category, SubCategory, PurchaseItem, Month, Budget, Purchase
 
 # Load manifest when server launches
 MANIFEST = {}
@@ -123,7 +123,7 @@ def getActualDict(req, month):
     purchases = Purchase.objects.filter(user=req.user, date__year=month.year, date__month=month.month)
     actual_dict = {}
     for p in purchases:
-        for item in purchaseItem.objects.filter(purchase=p):
+        for item in PurchaseItem.objects.filter(purchase=p):
             # subcategory actuals
             key = f"{item.subcategory.id}"
             actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
@@ -132,8 +132,12 @@ def getActualDict(req, month):
             key_cat = f"{item.category.id}"
             actual_dict[key_cat] = actual_dict.get(key_cat, 0) + float(item.amount)
 
-            # total month actual
-            actual_dict["actual_total"] = actual_dict.get("actual_total", 0) + float(item.amount)
+            if item.category.name == "Income":
+                # total month income
+                actual_dict["income_actual"] = actual_dict.get("income_actual", 0) + float(item.amount)
+            else:
+                # total month actual
+                actual_dict["actual_total"] = actual_dict.get("actual_total", 0) + float(item.amount)
     
     return actual_dict
 
@@ -150,9 +154,13 @@ def getBudgetDict(req, month):
         key_cat = f"{b.category.id}"
         budget_dict[key_cat] = budget_dict.get(key_cat, 0) + float(b.budget)
 
-        # total month budget and expected budget
-        budget_dict["total_budget"] = float(month.total_budget)
-        budget_dict["expected_total"] = budget_dict.get("expected_total", 0) + float(b.budget)
+        if b.category.name == "Income":
+            # total month income
+            budget_dict["income_expected"] = budget_dict.get("income_expected", 0) + float(b.budget)
+        else:
+            # total month budget and expected budget
+            budget_dict["total_budget"] = float(month.total_budget)
+            budget_dict["expected_total"] = budget_dict.get("expected_total", 0) + float(b.budget)
     
     return budget_dict
 
@@ -166,39 +174,60 @@ def createBase(user, year, month):
     )
 
     # Predefined Categories
-    categories = ["Income","Housing","Transportation","Food","Utilities","Savings",
-        "Entertainment","Miscellaneous"
-    ]
+    categories = Category.objects.filter(user=user)
+    subcategories = SubCategory.objects.filter(category__user=user)
+    if not categories:
+        categories = ["Income","Housing","Transportation","Food","Utilities","Savings",
+            "Entertainment","Miscellaneous"
+        ]
 
-    # Predefined SubCategories
-    subcategories = {
-        "Income": ["Salary"],
-        "Housing": ["Rent"],
-        "Transportation": ["Gas", "Insurance"],
-        "Food": ["Groceries", "Dining Out", "Snacks"],
-        "Utilities": ["Electricity", "Water", "Internet", "Phone", "Gas"],
-        "Savings": ["Emergency Fund", "Retirement", "Investments"],
-        "Entertainment": ["Movies", "Concerts", "Hobbies"],
-        "Miscellaneous": ["Gifts", "Donations", "Subscriptions"]
-    }
-    for cat_name, subcat_list in subcategories.items():
-        cat_obj, _ = Category.objects.get_or_create(user=user, name=cat_name)
-        for subcat in subcat_list:
-            subcat_obj, _ = SubCategory.objects.get_or_create(name=subcat, category=cat_obj)
-            #Add Budget to each subcategory with 0 amount
+        # Predefined SubCategories
+        subcategories = {
+            "Income": ["Salary"],
+            "Housing": ["Rent"],
+            "Transportation": ["Gas", "Insurance"],
+            "Food": ["Groceries", "Dining Out", "Snacks"],
+            "Utilities": ["Electricity", "Water", "Internet", "Phone", "Gas"],
+            "Savings": ["Emergency Fund", "Retirement", "Investments"],
+            "Entertainment": ["Movies", "Concerts", "Hobbies"],
+            "Miscellaneous": ["Gifts", "Donations", "Subscriptions"]
+        }
+        for cat_name, subcat_list in subcategories.items():
+            cat_obj, _ = Category.objects.get_or_create(user=user, name=cat_name)
+            for subcat in subcat_list:
+                subcat_obj, _ = SubCategory.objects.get_or_create(name=subcat, category=cat_obj)
+                #Add Budget to each subcategory with 0 amount
+                Budget.objects.get_or_create(
+                    user=user,
+                    month=getMonth,
+                    category=cat_obj,
+                    subcategory=subcat_obj,
+                    budget=0
+                )
+                # Add categories and subcategories to item connected to base purchase
+                PurchaseItem.objects.get_or_create(
+                    user=user,
+                    purchase=base,
+                    category=cat_obj,
+                    subcategory=subcat_obj,
+                    amount=0
+                )
+    else:
+        for sub in subcategories:
+            # Ensure Budget exists for each subcategory with 0 amount
             Budget.objects.get_or_create(
                 user=user,
                 month=getMonth,
-                category=cat_obj,
-                subcategory=subcat_obj,
+                category=sub.category,
+                subcategory=sub,
                 budget=0
             )
-            # Add categories and subcategories to item connected to base purchase
-            purchaseItem.objects.get_or_create(
+            # Ensure PurchaseItem exists for each subcategory under base purchase
+            PurchaseItem.objects.get_or_create(
                 user=user,
                 purchase=base,
-                category=cat_obj,
-                subcategory=subcat_obj,
+                category=sub.category,
+                subcategory=sub,
                 amount=0
             )
     return getMonth, base
@@ -222,19 +251,23 @@ def yearInfo(req, year):
     monthData = []
     for monthObj in getMonthObjs:
         monthName = datetime.date(2000, monthObj.month, 1).strftime("%B")
+        budget_dict = getBudgetDict(req, monthObj)
+        actual_dict = getActualDict(req, monthObj)
         monthData.append({
             "month": model_to_dict(monthObj),
             "monthName": monthName,
-            "budgets": getBudgetDict(req, monthObj),
-            "actuals": getActualDict(req, monthObj)
+            "planned": budget_dict.get("total_budget", 0),
+            "expected": budget_dict.get("expected_total", 0),
+            "actual": actual_dict.get("actual_total", 0),
         })
 
     return JsonResponse({
         "year": year,
         "months": monthData,
         "missing_months": [datetime.date(2000, m, 1).strftime("%B") for m in range(1,13) if m not in [mo.month for mo in getMonthObjs]],
-        "expected_total": sum([md["budgets"].get("total_budget", 0) for md in monthData]),
-        "actual_total": sum([md["actuals"].get("actual_total", 0) for md in monthData])
+        "planned_total": sum([md["planned"] for md in monthData]),
+        "expected_total": sum([md["expected"] for md in monthData]),
+        "actual_total": sum([md["actual"] for md in monthData])
     })
 
 @login_required
@@ -317,10 +350,10 @@ def purchases(req):
         date=first_date
     )
 
-    # Create purchaseItem records
+    # Create PurchaseItem records
     created_items = []
     for v in validated:
-        it = purchaseItem.objects.create(
+        it = PurchaseItem.objects.create(
             user=req.user,
             purchase=purchase,
             category=v["category"],
@@ -350,7 +383,7 @@ def purchases(req):
 
 @login_required
 def purchase_items(req):
-    items = purchaseItem.objects.filter(user=req.user)
+    items = PurchaseItem.objects.filter(user=req.user)
     item_list = [model_to_dict(i) for i in items]
     return JsonResponse({"purchaseItems": item_list})
 
@@ -372,7 +405,7 @@ def purchase_detail(req, purchase_id):
 def purchase_item_detail(req, item_id):
     # DELETE a single purchaseItem and update its parent Purchase total
     if req.method == "DELETE":
-        it = purchaseItem.objects.filter(id=item_id, user=req.user).first()
+        it = PurchaseItem.objects.filter(id=item_id, user=req.user).first()
         if not it:
             return JsonResponse({"error": "Item not found"}, status=404)
         with transaction.atomic():
@@ -395,8 +428,9 @@ def change(req):
     obj_type = body.get("type")
     obj_id = body.get("id")
     content = body.get("content")
+    month = body.get("month")
 
-    if body.get("month"):
+    if body.get("ismonth"):
         obj = Month.objects.filter(id=obj_id, user=req.user).first()
         obj.total_budget = content
         obj.save()
@@ -406,7 +440,10 @@ def change(req):
     elif obj_type == "sub":
         obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
     elif obj_type == "number":
-        obj = Budget.objects.filter(subcategory__id=obj_id, user=req.user).first()
+        month = Month.objects.filter(user=req.user, id=month.get("id")).first()
+        sub = SubCategory.objects.filter(id=obj_id).first()
+        cat = sub.category if sub else None
+        obj = Budget.objects.get_or_create(month=month, category= cat, subcategory=sub, user=req.user)[0]
     else:
         return JsonResponse({"error": "Invalid type"}, status=400)
 
