@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import { TableView } from './tableView.jsx';
+import { YearView } from './yearView.jsx';
 import { EnterPurchase } from './enterPurchase.jsx';
 import { CreateCategory } from './createCategory.jsx';
 import { CreateSubCat } from './createSubCat.jsx';
@@ -19,6 +20,9 @@ function App() {
   const [showEnterPurchase, setShowEnterPurchase] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [showCreateSubCat, setShowCreateSubCat] = useState(false);
+  const [showView, setShowView] = useState(true);
+  const [edit, setEdit] = useState(false);
+
   
   const [categories, setCats] = useState([])
   const [subcategories, setSubs] = useState([])
@@ -42,7 +46,10 @@ function App() {
   return (
     <div className="App">
       <div className="Navbar">
-      
+
+        <button onClick={() => setShowView(prev => !prev)}> Year View </button>
+        <button onClick={() => setShowView(prev => !prev)}> Month View </button>
+
        <button onClick={() => setShowViewButtons(prev => !prev)}>Views</button>
        {showViewButtons && <ChangeViews
         setShowTable={setShowTable}
@@ -61,7 +68,6 @@ function App() {
         setShowCreateCategory={setShowCreateCategory}
         setShowCreateSubCat={setShowCreateSubCat}
        />}
-       
        
        <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
        <button onClick={logout}>Logout</button>
