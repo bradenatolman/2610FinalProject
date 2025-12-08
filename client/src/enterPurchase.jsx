@@ -4,7 +4,7 @@ import * as cookie from "cookie";
 
 
 export function EnterPurchase(props) {
-    const { categories, setCats, subcategories, setSubs } = props;
+    const { changed, setChanged, categories, setCats, subcategories, setSubs } = props;
     // entries: array of { categoryId, subcategoryId, amount }
     const [entries, setEntries] = useState([
         { categoryId: null, subcategoryId: null, amount: "" }
@@ -113,6 +113,7 @@ export function EnterPurchase(props) {
         } else {
             setStatusMessage(body.error || "Failed to create entries.");
         }
+        setChanged(!changed);
     }
 
     return (

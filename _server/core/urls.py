@@ -10,4 +10,7 @@ urlpatterns = [
     path("purchases/", view=views.purchases, name="purchases"),
     path("change/", view=views.change, name="change"),
     path("today/", view=views.today, name="today"),
+    path("purchaseItems/", view=views.purchase_items, name="purchaseItems"),
+    path("purchaseItems/<int:item_id>/", view=views.purchase_item_detail, name="purchase_item_detail"),
+    path("purchases/<int:purchase_id>/", view=views.purchase_detail, name="purchase_detail"),
 ]
