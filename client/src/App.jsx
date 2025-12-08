@@ -10,6 +10,8 @@ import { ChangeViews } from './changeViews.jsx';
 
 function App() {
   const [edit, setEdit] = useState(false);
+  const [changed, setChanged] = useState(false);
+
   const [showDataButtons, setShowDataButtons] = useState(false);
   const [showViewButtons, setShowViewButtons] = useState(false);
 
@@ -72,6 +74,8 @@ function App() {
           setCats={setCats}
           subcategories={subcategories}
           setSubs={setSubs}
+          changed={changed}
+          setChanged={setChanged}
         />
       </div>}
 
@@ -96,6 +100,8 @@ function App() {
           setCats={setCats}
           setSubs={setSubs}
           edit={edit}
+          changed={changed}
+          setChanged={setChanged}
          /> 
         }
          { showList && <ListView 
@@ -104,6 +110,7 @@ function App() {
           setCats={setCats}
           setSubs={setSubs}
           edit={edit}
+          changed={changed}
           /> }
       </div>
       

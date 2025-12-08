@@ -3,8 +3,7 @@ import { EditText, EditNum } from "./tableInput.jsx";
 import { useEffect, useState } from "react";
 
 export function TableView(props) {
-    const { edit, categories, subcategories, setCats, setSubs } = props;
-    const [changed, setChanged] = useState(false);
+    const { edit, categories, subcategories, setCats, setSubs, changed, setChanged } = props;
     const [budgets, setBudgets] = useState({});
     const [actuals, setActuals] = useState({});
     const [monthName, setMonthName] = useState("");

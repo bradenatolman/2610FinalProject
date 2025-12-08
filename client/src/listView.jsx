@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import * as cookie from "cookie";
 
 export function ListView(props) {
-    const { categories, subcategories, setCats, setSubs, edit } = props;
+    const { categories, subcategories, setCats, setSubs, edit, changed } = props;
     const [ purchases, setPurchases] = useState([]);
     const [ purchaseItems, setPurchaseItems ] = useState([]);
     const [ year, setYear ] = useState(new Date().getFullYear());
@@ -39,7 +39,7 @@ export function ListView(props) {
 
     useEffect(() => {
         reloadData();
-    }, []);
+    }, [changed]);
 
     function handleEdit(purchaseId) {
         // Implement edit functionality here
