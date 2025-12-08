@@ -222,19 +222,23 @@ def yearInfo(req, year):
     monthData = []
     for monthObj in getMonthObjs:
         monthName = datetime.date(2000, monthObj.month, 1).strftime("%B")
+        budget_dict = getBudgetDict(req, monthObj)
+        actual_dict = getActualDict(req, monthObj)
         monthData.append({
             "month": model_to_dict(monthObj),
             "monthName": monthName,
-            "budgets": getBudgetDict(req, monthObj),
-            "actuals": getActualDict(req, monthObj)
+            "planned": budget_dict.get("total_budget", 0),
+            "expected": budget_dict.get("expected_total", 0),
+            "actual": actual_dict.get("actual_total", 0),
         })
 
     return JsonResponse({
         "year": year,
         "months": monthData,
         "missing_months": [datetime.date(2000, m, 1).strftime("%B") for m in range(1,13) if m not in [mo.month for mo in getMonthObjs]],
-        "expected_total": sum([md["budgets"].get("total_budget", 0) for md in monthData]),
-        "actual_total": sum([md["actuals"].get("actual_total", 0) for md in monthData])
+        "planned_total": sum([md["planned"] for md in monthData]),
+        "expected_total": sum([md["expected"] for md in monthData]),
+        "actual_total": sum([md["actual"] for md in monthData])
     })
 
 @login_required

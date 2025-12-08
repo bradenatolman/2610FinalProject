@@ -30,6 +30,7 @@ export function YearView(props) {
         const body = await res.json();
         setMonths(body.months);
         setYearInfo(body);
+        console.log(body);
     }
 
     useEffect(() => {
@@ -55,24 +56,28 @@ export function YearView(props) {
                     <thead>
                         <tr>
                             <th className="left">Yearly Budget</th>
+                            <th>Expected</th>
                             <th>Actual</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td className="left">{yearInfo.total_budget || 0}</td>
+                            <td>{yearInfo.expected_total || 0}</td>
                             <td>
                                 {yearInfo.actual_total || "-"}
                             </td>
                         </tr>
-                        {yearInfo.missing_months.length > 0 && (
+                    </tbody>
+                    <tfoot>
+                         {yearInfo.missing_months.length > 0 && (
                         <tr>
-                            <td style={{colSpan: 2}}>
+                            <td colSpan={3}>
                                 <b>Missing:</b> {yearInfo.missing_months.join(", ")}
                             </td>
                         </tr>
                         )}
-                    </tbody>
+                    </tfoot>
                 </table>
             </div>
 
@@ -82,14 +87,16 @@ export function YearView(props) {
                             <thead>
                                 <tr>
                                     <th className="left">Month</th>
+                                    <th>Planned</th>
                                     <th>Expected</th>
                                     <th>Actual</th>
                                 </tr>
                             </thead>
                             <tbody>
                             {months.map(mon => (
-                                <tr key={mon.id}>
+                                <tr key={mon.month.id}>
                                     <td className="left">{mon.monthName}</td>
+                                    <td>{mon.planned || 0}</td>
                                     <td>{mon.expected || 0}</td>
                                     <td>{mon.actual || 0}</td>
                                 </tr>
@@ -98,6 +105,7 @@ export function YearView(props) {
                             <tfoot>
                                 <tr>
                                     <td className="left">Total</td>
+                                    <td>{yearInfo.planned_total || 0}</td>
                                     <td>{yearInfo.expected_total || 0}</td>
                                     <td>{yearInfo.actual_total || 0}</td>
                                 </tr>
