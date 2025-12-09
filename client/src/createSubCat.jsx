@@ -109,7 +109,7 @@ export function CreateSubCat(props) {
                 )}
                 <button type="submit">Create</button>
             </form>
-            <button onClick={() => props.setShowCreateSubCat(false)}>Close</button>
+            <button onClick={() => setShowCreateSubCat(false)}>Close</button>
         </div>
     );
 }

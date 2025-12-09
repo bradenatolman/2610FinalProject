@@ -47,7 +47,7 @@ function App() {
         <div className="menu-row">
             <div className="toggle-wrap" style={{ position: 'relative', display: 'inline-block' }}>
               <button
-                onClick={() => setShowViewButtons(prev => !prev)}
+                onClick={() => {setShowViewButtons(prev => !prev); setShowDataButtons(false); }}
                 aria-expanded={showViewButtons}
                 aria-controls="views-dropdown"
               >
@@ -72,7 +72,8 @@ function App() {
 
             <div className="toggle-wrap" style={{ position: 'relative', display: 'inline-block', marginLeft: '8px' }}>
               <button
-                onClick={() => setShowDataButtons(prev => !prev)}
+                onClick={() => { setShowDataButtons(prev => !prev); setShowViewButtons(false); }}
+
                 aria-expanded={showDataButtons}
                 aria-controls="data-dropdown"
               >

@@ -181,7 +181,7 @@ export function EnterPurchase(props) {
                 </div>
                 {statusMessage && <div className="status">{statusMessage}</div>}
             </form>
-            <button onClick={() => props.setShowEnterPurchase(false)}>Close</button>
+            <button onClick={() => setShowEnterPurchase(false)}>Close</button>
         </div>
     );
 }

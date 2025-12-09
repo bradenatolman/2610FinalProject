@@ -72,7 +72,7 @@ export function CreateCategory(props) {
                     <li key={cat.id || cat.category || cat.name}>{cat.name || cat.category}</li>
                 ))}
             </ul>
-            <button onClick={() => props.setShowCreateCategory(false)}>Close</button>
+            <button onClick={() => setShowCreateCategory(false)}>Close</button>
         </div>
     );
 }
