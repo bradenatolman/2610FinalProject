@@ -124,11 +124,6 @@ def getActualDict(req, month):
     actual_dict = {}
     for p in purchases:
         for item in PurchaseItem.objects.filter(purchase=p):
-
-            if item.category.name=="uncategorized" or item.subcategory is None:
-                actual_dict['null_key'] = actual_dict.get('null_key', 0) + float(item.amount)
-
-            # subcategory actuals
             key = f"{item.subcategory.id}"
             actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
 
@@ -150,11 +145,6 @@ def getBudgetDict(req, month):
     budgets = Budget.objects.filter(user=req.user, month=month)
     budget_dict = {}
     for b in budgets:
-        print(b.subcategory)
-        if b.category.name=="uncategorized" or b.subcategory is None:
-                budget_dict['null_key'] = budget_dict.get('null_key', 0) + float(b.budget)
-
-        # subcategory budgets
         key = f"{b.subcategory.id}"
         budget_dict[key] = float(b.budget)
 
@@ -180,16 +170,8 @@ def createBase(user, year, month):
         date=datetime.date(year, month, 1),
         total=0,
     )
-
-    # Predefined Categories
-    categories = Category.objects.filter(user=user)
-    subcategories = SubCategory.objects.filter(category__user=user)
-    if not categories:
-        categories = ["Income","Housing","Transportation","Food","Utilities","Savings",
-            "Entertainment","Miscellaneous"
-        ]
-
-        # Predefined SubCategories
+    if not Category.objects.filter(user=user).first():
+        # Predefined categories and subcategories
         subcategories = {
             "Income": ["Salary"],
             "Housing": ["Rent"],
@@ -198,7 +180,9 @@ def createBase(user, year, month):
             "Utilities": ["Electricity", "Water", "Internet", "Phone", "Gas"],
             "Savings": ["Emergency Fund", "Retirement", "Investments"],
             "Entertainment": ["Movies", "Concerts", "Hobbies"],
-            "Miscellaneous": ["Gifts", "Donations", "Subscriptions"]
+            "Miscellaneous": ["Gifts", "Donations", "Subscriptions"],
+            'Uncategorized': []
+
         }
         for cat_name, subcat_list in subcategories.items():
             cat_obj, _ = Category.objects.get_or_create(user=user, name=cat_name)
@@ -322,6 +306,9 @@ def purchases(req):
                 sub_obj = SubCategory.objects.filter(id=sub_id, category=cat_obj).first()
                 if not sub_obj:
                     raise ValueError(f"Subcategory id {sub_id} not found for category {cat_id}")
+            else: # Allow null subcategory
+                sub_obj = SubCategory.objects.get_or_create(name="Uncategorized", category=cat_obj)[0]
+
 
             validated.append({
                 "category": cat_obj,
