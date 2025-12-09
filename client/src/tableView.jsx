@@ -86,7 +86,7 @@ export function TableView(props) {
                 data={categories.map(cat => {                    
                     return ({
                         name: cat.name,
-                        value: budgets[`${cat.id}`] || 0,
+                        value: budgets[`${cat.name}`] || 0,
                     });
                 })}
                 defaultIndex={0} />
@@ -184,10 +184,10 @@ export function TableView(props) {
                                                         <b style={{ color: "red" }}>X</b>
                                                     </button>
                                                 )}<EditText id={sub.id} type="sub" name={sub.name} changed={changed} setChanged={setChanged} /></span>)}</td>
-                                                    <td>{!edit ? budgets[`${sub.id}`] : (<EditNum id={sub.id} number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} month={month} ismonth={false} />)}</td>
+                                                    <td>{!edit ? budgets[`${sub.name}`] : (<EditNum id={sub.id} number={budgets[`${sub.name}`]} changed={changed} setChanged={setChanged} month={month} ismonth={false} />)}</td>
                                                     
-                                                    { cat.name !== 'Income' ? (<td style={{color: red(budgets[`${sub.id}`], actuals[`${sub.id}`])}}>
-                                                        {actuals[`${sub.id}`] || "-"}</td>) : (<td>{actuals[`${sub.id}`] || "-"}</td>)}
+                                                    { cat.name !== 'Income' ? (<td style={{color: red(budgets[`${sub.name}`], actuals[`${sub.name}`])}}>
+                                                        {actuals[`${sub.name}`] || "-"}</td>) : (<td>{actuals[`${sub.name}`] || "-"}</td>)}
                                                 </tr>
                                             )})}
                                         </tbody>
@@ -198,9 +198,9 @@ export function TableView(props) {
                                 <tfoot>
                                     <tr>
                                         <td className="left">Total</td>
-                                        <td>{budgets[`${cat.id}`] || 0}</td>
-                                       { cat.name !== 'Income' ? (<td style={{color: red(budgets[`${cat.id}`], actuals[`${cat.id}`])}}>
-                                                        {actuals[`${cat.id}`] || "-"}</td>) : (<td>{actuals[`${cat.id}`] || "-"}</td>)}
+                                        <td>{budgets[`${cat.name}`] || 0}</td>
+                                       { cat.name !== 'Income' ? (<td style={{color: red(budgets[`${cat.name}`], actuals[`${cat.name}`])}}>
+                                                        {actuals[`${cat.name}`] || "-"}</td>) : (<td>{actuals[`${cat.name}`] || "-"}</td>)}
                                     </tr>
                                 </tfoot>
                              </table>

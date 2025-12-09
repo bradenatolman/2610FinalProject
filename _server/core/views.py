@@ -124,11 +124,11 @@ def getActualDict(req, month):
     actual_dict = {}
     for p in purchases:
         for item in PurchaseItem.objects.filter(purchase=p):
-            key = f"{item.subcategory.id}"
+            key = f"{item.subcategory.name}"
             actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
 
             # category actuals
-            key_cat = f"{item.category.id}"
+            key_cat = f"{item.category.name}"
             actual_dict[key_cat] = actual_dict.get(key_cat, 0) + float(item.amount)
 
             if item.category.name == "Income":
@@ -146,17 +146,16 @@ def getBudgetDict(req, month):
     budget_dict = {}
     # Set total_budget once, outside the loop
     budget_dict["total_budget"] = float(month.total_budget)
-    
     for b in budgets:
-        key = f"{b.subcategory.id}"
+        key = f"{b.subcategory.name}"
         budget_dict[key] = float(b.budget)
 
         # category budgets
-        key_cat = f"{b.category.id}"
+        key_cat = f"{b.category.name}"
         budget_dict[key_cat] = budget_dict.get(key_cat, 0) + float(b.budget)
+       
 
         if b.category.name == "Income":
-            # total month income
             budget_dict["income_expected"] = budget_dict.get("income_expected", 0) + float(b.budget)
         else:
             # total month expected budget
