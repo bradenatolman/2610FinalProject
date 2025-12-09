@@ -1,4 +1,4 @@
-import "./tableView.css";
+import "./views.css";
 import { useEffect, useState } from "react";
 
 export function YearView(props) {
