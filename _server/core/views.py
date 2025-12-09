@@ -124,6 +124,10 @@ def getActualDict(req, month):
     actual_dict = {}
     for p in purchases:
         for item in PurchaseItem.objects.filter(purchase=p):
+
+            if item.category.name=="uncategorized" or item.subcategory is None:
+                actual_dict['null_key'] = actual_dict.get('null_key', 0) + float(item.amount)
+
             # subcategory actuals
             key = f"{item.subcategory.id}"
             actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
@@ -146,6 +150,10 @@ def getBudgetDict(req, month):
     budgets = Budget.objects.filter(user=req.user, month=month)
     budget_dict = {}
     for b in budgets:
+        print(b.subcategory)
+        if b.category.name=="uncategorized" or b.subcategory is None:
+                budget_dict['null_key'] = budget_dict.get('null_key', 0) + float(b.budget)
+
         # subcategory budgets
         key = f"{b.subcategory.id}"
         budget_dict[key] = float(b.budget)
@@ -458,3 +466,23 @@ def change(req):
         obj.name = content
         obj.save()
         return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_name": content})
+
+@login_required
+def delete(req):
+    if req.method == "POST":
+        body = json.loads(req.body)
+        obj_type = body.get("type")
+        obj_id = body.get("id")
+
+        if obj_type == "cat":
+            obj = Category.objects.filter(id=obj_id, user=req.user).first()
+        elif obj_type == "sub":
+            obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
+        else:
+            return JsonResponse({"error": "Invalid type"}, status=400)
+
+        if not obj:
+            return JsonResponse({"error": "Object not found"}, status=404)
+
+        obj.delete()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type})

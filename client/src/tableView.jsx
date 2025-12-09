@@ -1,4 +1,5 @@
 import "./tableView.css";
+import * as cookie from "cookie";
 import { EditText, EditNum } from "./tableInput.jsx";
 import { useEffect, useState } from "react";
 
@@ -9,7 +10,9 @@ export function TableView(props) {
     const [monthName, setMonthName] = useState("");
     const [month, setMonth] = useState({month: 0, year: 0});
     const [showIncomeSummary, setShowIncomeSummary] = useState(false);
+    const [objToDel, setObjToDel] = useState({id: null, type: null});
 
+   
     function updateMonth(delta) {
         return () => {
             let newMonth = month.month + delta;
@@ -21,9 +24,7 @@ export function TableView(props) {
                 newMonth = 1;
                 newYear += 1;
             }
-            month.year = newYear;
-            month.month = newMonth;
-            setMonth({...month});
+            setMonth({month: newMonth, year: newYear});
             setChanged(!changed);
         }
     }
@@ -52,10 +53,30 @@ export function TableView(props) {
         setActuals(body.actuals);
     }
 
+    async function deleteFromDB() {
+        console.log("Deleting:", objToDel);
+        const res = await fetch(`/delete/`, {
+              method: "POST",
+              credentials: "same-origin",
+              body: JSON.stringify(objToDel), 
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": cookie.parse(document.cookie).csrftoken,
+              },
+            });
+            
+            setChanged(!changed);
+    }
+
     // Changes Month and displays data for that month
     useEffect(() => {
         getTableInfo();
     }, [changed])
+
+    useEffect(() => {
+        if (objToDel.id !== null)
+            deleteFromDB();
+    }, [objToDel]);
 
     return (
          <div>  
@@ -96,8 +117,9 @@ export function TableView(props) {
                         </tr>
                         )}
                         <tr>
-                            <td onClick={() => setShowIncomeSummary(!showIncomeSummary)}> <u>Difference</u></
-                            td>
+                            <td onClick={() => setShowIncomeSummary(!showIncomeSummary)}>
+                                 <u>Difference</u>
+                            </td>
                             <td style={{color: red(budgets.income_expected, budgets.expected_total, true)}}>
                                 {(budgets.income_expected || 0) - (budgets.expected_total || 0)}
                             </td>
@@ -117,33 +139,55 @@ export function TableView(props) {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th className="left">{!edit ? cat.name : (<EditText id={cat.id} type="cat" name={cat.name} changed={changed} setChanged={setChanged} />)}</th>
+                                       <th className="left">
+                                            {!edit ? ( cat.name ) : ( <span>
+                                                {cat.name === "Income" ? "" : (
+                                                    <button onClick={() => setObjToDel({type: 'cat', id: cat.id})}>
+                                                        <b style={{ color: "red" }}>X</b>
+                                                    </button>
+                                                )}
+                                                <EditText
+                                                    id={cat.id}
+                                                    type="cat"
+                                                    name={cat.name}
+                                                    changed={changed}
+                                                    setChanged={setChanged}
+                                                />
+                                                </span>
+                                                )
+                                            }
+                                        </th>
                                         <th>Expected</th>
                                         <th>Actual</th>
                                     </tr>
                                 </thead>
                                 {subsForCat.length ? (
                                         <tbody>
-                                            {subsForCat.map(sub => (
+                                            {subsForCat.map(sub => {
+                                                return (
                                                 <tr key={sub.id}>
-                                                    <td className="left">{!edit ? sub.name : (<EditText id={sub.id} type="sub" name={sub.name} changed={changed} setChanged={setChanged} />)}</td>
+                                                    <td className="left">{!edit ? sub.name : (<span>{(cat.name === "Income" && subsForCat.length<2) ? "" : (
+                                                    <button onClick={() => setObjToDel({type: 'sub', id: sub.id})}>
+                                                        <b style={{ color: "red" }}>X</b>
+                                                    </button>
+                                                )}<EditText id={sub.id} type="sub" name={sub.name} changed={changed} setChanged={setChanged} /></span>)}</td>
                                                     <td>{!edit ? budgets[`${sub.id}`] : (<EditNum id={sub.id} number={budgets[`${sub.id}`]} changed={changed} setChanged={setChanged} month={month} ismonth={false} />)}</td>
                                                     
-                                                    { sub.category.name === 'Income' ? (<td style={{color: red(budgets[`${sub.id}`], actuals[`${sub.id}`])}}>
+                                                    { cat.name !== 'Income' ? (<td style={{color: red(budgets[`${sub.id}`], actuals[`${sub.id}`])}}>
                                                         {actuals[`${sub.id}`] || "-"}</td>) : (<td>{actuals[`${sub.id}`] || "-"}</td>)}
                                                 </tr>
-                                            ))}
+                                            )})}
                                         </tbody>
                                 
                                 ) : (
-                                    <tbody><tr><td>{edit ?(<button>Add Subcategory</button>) : '-'}</td><td>-</td><td>-</td></tr></tbody>
+                                    <tbody><tr><td>{edit ?(<button>Add Subcategory Above</button>) : '-'}</td><td>-</td><td>-</td></tr></tbody>
                                 )}
                                 <tfoot>
                                     <tr>
                                         <td className="left">Total</td>
                                         <td>{budgets[`${cat.id}`] || 0}</td>
-                                        <td style={{color: red(budgets[`${cat.id}`], actuals[`${cat.id}`])}}>
-                                            {actuals[`${cat.id}`] || 0}</td>
+                                       { cat.name !== 'Income' ? (<td style={{color: red(budgets[`${cat.id}`], actuals[`${cat.id}`])}}>
+                                                        {actuals[`${cat.id}`] || "-"}</td>) : (<td>{actuals[`${cat.id}`] || "-"}</td>)}
                                     </tr>
                                 </tfoot>
                              </table>
