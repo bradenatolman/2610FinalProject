@@ -1,6 +1,6 @@
 import "./tableView.css";
 import * as cookie from "cookie";
-import { EditText, EditNum } from "./tableInput.jsx";
+import { EditText, EditNum, EditColor } from "./tableInput.jsx";
 import { useEffect, useState } from "react";
 // import Donut from "./Graphs.jsx";
 
@@ -105,9 +105,9 @@ export function TableView(props) {
                 <table>
                     <thead>
                         <tr>
-                            <th>Monthly Budget</th>
+                            <th className="top-left">Monthly Budget</th>
                             <th>Expected</th>
-                            <th>Actual</th>
+                            <th className="top-right">Actual</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -150,30 +150,35 @@ export function TableView(props) {
                     return (
                         <div key={cat.id} className="category-table">
                             <table>
-                                <thead>
+                                <thead style={{ background: cat.color }} className="category-color">                                  
                                     <tr>
-                                       <th className="left">
+                                       <th className="left top-left">
                                             {!edit ? ( cat.name ) : ( <span>
-                                                {cat.name === "Income" ? "" : (
+                                                {cat.name === "Income" ? cat.name : (
+                                                    <>
                                                     <button onClick={() => setObjToDel({type: 'cat', id: cat.id})}>
                                                         <b style={{ color: "red" }}>X</b>
                                                     </button>
+                                                    <EditText
+                                                        id={cat.id}
+                                                        type="cat"
+                                                        name={cat.name}
+                                                        changed={changed}
+                                                        setChanged={setChanged}
+                                                    />
+                                                    </>
                                                 )}
-                                                <EditText
-                                                    id={cat.id}
-                                                    type="cat"
-                                                    name={cat.name}
-                                                    changed={changed}
-                                                    setChanged={setChanged}
-                                                />
+                                                
+                                                <EditColor id={cat.id} val={cat.color} changed={changed} setChanged={setChanged} />
                                                 </span>
                                                 )
                                             }
                                         </th>
                                         <th>Expected</th>
-                                        <th>Actual</th>
+                                        <th className="top-right">Actual</th>
                                     </tr>
                                 </thead>
+                                
                                 {subsForCat.length ? (
                                         <tbody>
                                             {subsForCat.map(sub => {

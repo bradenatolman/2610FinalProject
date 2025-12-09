@@ -440,6 +440,12 @@ def change(req):
         sub = SubCategory.objects.filter(id=obj_id).first()
         cat = sub.category if sub else None
         obj = Budget.objects.get_or_create(month=month, category= cat, subcategory=sub, user=req.user)[0]
+
+    elif obj_type == "color":
+        obj = Category.objects.filter(id=obj_id, user=req.user).first()
+        obj.color = content
+        obj.save()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_color": content})
     else:
         return JsonResponse({"error": "Invalid type"}, status=400)
 
