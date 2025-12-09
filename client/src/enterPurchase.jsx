@@ -4,7 +4,7 @@ import * as cookie from "cookie";
 
 
 export function EnterPurchase(props) {
-    const { changed, setChanged, categories, setCats, subcategories, setSubs } = props;
+    const { changed, setChanged, categories, setCats, subcategories, setSubs , setShowEnterPurchase} = props;
     // entries: array of { categoryId, subcategoryId, amount }
     const [entries, setEntries] = useState([
         { categoryId: null, subcategoryId: null, amount: "" }
@@ -181,6 +181,7 @@ export function EnterPurchase(props) {
                 </div>
                 {statusMessage && <div className="status">{statusMessage}</div>}
             </form>
+            <button onClick={() => props.setShowEnterPurchase(false)}>Close</button>
         </div>
     );
 }

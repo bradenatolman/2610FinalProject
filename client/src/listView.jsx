@@ -8,6 +8,9 @@ export function ListView(props) {
     const [ purchaseItems, setPurchaseItems ] = useState([]);
     const [ year, setYear ] = useState(new Date().getFullYear());
     const [ month, setMonth ] = useState(new Date().getMonth() + 1); // Months are 0-indexed
+    const [ mode, setMode ] = useState('month'); // 'month' or 'year'
+
+    const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     // reloadData fetches purchases and purchaseItems and updates state
     async function reloadData() {
@@ -15,13 +18,27 @@ export function ListView(props) {
             const resP = await fetch(`/purchases/`, { credentials: "same-origin" });
             if (resP.ok) {
                 const body = await resP.json();
-                const raw = body.purchases || [];
+                let raw = body.purchases || [];
+                // parse and sort
+                raw = raw.map(p => ({ ...p, _parsedDate: p.date ? new Date(p.date) : null }));
                 raw.sort((a, b) => {
-                    const da = a.date ? new Date(a.date) : new Date(0);
-                    const db = b.date ? new Date(b.date) : new Date(0);
+                    const da = a._parsedDate || new Date(0);
+                    const db = b._parsedDate || new Date(0);
                     return db - da;
                 });
-                const filtered = raw.filter(p => p.total != 0);
+
+                // filter by mode (month/year) and non-zero total
+                const filtered = raw.filter(p => {
+                    if (!p._parsedDate) return false;
+                    if (p.total == 0) return false;
+                    const py = p._parsedDate.getFullYear();
+                    const pm = p._parsedDate.getMonth() + 1;
+                    if (mode === 'year') {
+                        return py === year;
+                    }
+                    // month mode
+                    return py === year && pm === month;
+                });
                 setPurchases(filtered || []);
             }
 
@@ -39,7 +56,20 @@ export function ListView(props) {
 
     useEffect(() => {
         reloadData();
-    }, [changed]);
+    }, [changed, month, year, mode]);
+
+    function changeMonth(delta) {
+        let m = month + delta;
+        let y = year;
+        if (m < 1) { m = 12; y = year - 1; }
+        if (m > 12) { m = 1; y = year + 1; }
+        setMonth(m);
+        setYear(y);
+    }
+
+    function changeYear(delta) {
+        setYear(prev => prev + delta);
+    }
 
     function handleEdit(purchaseId) {
         // Implement edit functionality here
@@ -81,7 +111,36 @@ export function ListView(props) {
 
     return (
         <div className="ListView">
-            <h2>Purchases for {month}/{year}</h2>
+            <div className="listview-header">
+                <div className="title">
+                    {mode === 'month' ? (
+                        <h2>{MONTH_NAMES[month - 1]} {year}</h2>
+                    ) : (
+                        <h2>Year {year}</h2>
+                    )}
+                </div>
+
+                <div className="controls">
+                    <div className="mode-toggle">
+                        <button className={mode === 'month' ? 'active' : ''} onClick={() => setMode('month')}>Month</button>
+                        <button className={mode === 'year' ? 'active' : ''} onClick={() => setMode('year')}>Year</button>
+                    </div>
+
+                    <div className="nav-buttons">
+                        {mode === 'month' ? (
+                            <>
+                                <button onClick={() => changeMonth(-1)}>&lt;</button>
+                                <button onClick={() => changeMonth(1)}>&gt;</button>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={() => changeYear(-1)}>&lt;</button>
+                                <button onClick={() => changeYear(1)}>&gt;</button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
             <table>
                 <thead>
                     <tr>

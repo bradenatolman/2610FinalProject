@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import * as cookie from "cookie";
 
 export function CreateSubCat(props) {
-    const { subcategories, setSubs } = props;
+    const { subcategories, setSubs , setShowCreateSubCat} = props;
     const [ categories, setCategories ] = useState([]);
     const [ category, setCategory ] = useState(null);
     const [ subcategoryName, setSubcategoryName] = useState("");
@@ -109,6 +109,7 @@ export function CreateSubCat(props) {
                 )}
                 <button type="submit">Create</button>
             </form>
+            <button onClick={() => props.setShowCreateSubCat(false)}>Close</button>
         </div>
     );
 }

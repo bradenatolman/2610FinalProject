@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import * as cookie from "cookie";
 
 export function CreateCategory(props) {
-    const { categories, setCats } = props;
+    const { categories, setCats, setShowCreateCategory } = props;
     const [ categoryName , setCategoryName] = useState("");
 
     useEffect(() => {
@@ -72,6 +72,7 @@ export function CreateCategory(props) {
                     <li key={cat.id || cat.category || cat.name}>{cat.name || cat.category}</li>
                 ))}
             </ul>
+            <button onClick={() => props.setShowCreateCategory(false)}>Close</button>
         </div>
     );
 }

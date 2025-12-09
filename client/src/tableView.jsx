@@ -1,4 +1,4 @@
-import "./tableView.css";
+import "./views.css";
 import { EditText, EditNum } from "./tableInput.jsx";
 import { useEffect, useState } from "react";
 

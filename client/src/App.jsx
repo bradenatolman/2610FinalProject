@@ -43,59 +43,87 @@ function App() {
 
   return (
     <div className="App">
-      <div className="Navbar">
+      <div className="Navbar" role="navigation">
+        <div className="menu-row">
+            <div className="toggle-wrap" style={{ position: 'relative', display: 'inline-block' }}>
+              <button
+                onClick={() => setShowViewButtons(prev => !prev)}
+                aria-expanded={showViewButtons}
+                aria-controls="views-dropdown"
+              >
+                Views
+              </button>
 
-       <button onClick={() => setShowViewButtons(prev => !prev)}>Views</button>
-       {showViewButtons && <ChangeViews
-        setShowTable={setShowTable}
-        setShowList={setShowList}
-        setShowYear={setShowYear}
-        setShowEnterPurchase={setShowEnterPurchase}
-        setShowCreateCategory={setShowCreateCategory}
-        setShowCreateSubCat={setShowCreateSubCat}
-       />}
+              <div
+                id="views-dropdown"
+                className={`menu-dropdown dropdown-views ${showViewButtons ? 'open' : ''}`}
+                aria-hidden={!showViewButtons}
+              >
+                <ChangeViews
+                  setShowTable={setShowTable}
+                  setShowList={setShowList}
+                  setShowYear={setShowYear}
+                  setShowEnterPurchase={setShowEnterPurchase}
+                  setShowCreateCategory={setShowCreateCategory}
+                  setShowCreateSubCat={setShowCreateSubCat}
+                />
+              </div>
+            </div>
 
-      
-       <button onClick={() => setShowDataButtons(prev => !prev)}>Enter Data</button>
-       {showDataButtons && <EnterDataButtons
-        setShowTable={setShowTable}
-        setShowList={setShowList}
-        setShowEnterPurchase={setShowEnterPurchase}
-        setShowCreateCategory={setShowCreateCategory}
-        setShowCreateSubCat={setShowCreateSubCat}
-       />}
-       
-       <button onClick={() => setEdit(!edit)}> {edit ? "Edit Off" : "Edit"}</button>
-       <button onClick={logout}>Logout</button>
+            <div className="toggle-wrap" style={{ position: 'relative', display: 'inline-block', marginLeft: '8px' }}>
+              <button
+                onClick={() => setShowDataButtons(prev => !prev)}
+                aria-expanded={showDataButtons}
+                aria-controls="data-dropdown"
+              >
+                Enter Data
+              </button>
+
+              <div
+                id="data-dropdown"
+                className={`menu-dropdown dropdown-data ${showDataButtons ? 'open' : ''}`}
+                aria-hidden={!showDataButtons}
+              >
+                <EnterDataButtons
+                  setShowTable={setShowTable}
+                  setShowList={setShowList}
+                  setShowEnterPurchase={setShowEnterPurchase}
+                  setShowCreateCategory={setShowCreateCategory}
+                  setShowCreateSubCat={setShowCreateSubCat}
+                  setShowDataButtons={setShowDataButtons}
+                />
+              </div>
+            </div>
+
+            <button onClick={() => setEdit(!edit)}>{edit ? 'Edit Off' : 'Edit'}</button>
+            <button onClick={logout}>Logout</button>
+          </div>
       </div>
-      
-
-      {showEnterPurchase && <div className="EnterPurchase">
-        <EnterPurchase 
-          categories={categories}
-          setCats={setCats}
-          subcategories={subcategories}
-          setSubs={setSubs}
-          changed={changed}
-          setChanged={setChanged}
-        />
-      </div>}
-
-      {showCreateCategory && <div className="CreateCategory">
-        <CreateCategory
-          categories={categories}
-          setCats={setCats}
-           />
-      </div>}
-
-      {showCreateSubCat && <div className="CreateSubCat">
-        <CreateSubCat
-          subcategories={subcategories}
-          setSubs={setSubs}
-           />
-      </div>}
 
       <div className="Page">
+          { showEnterPurchase && <EnterPurchase
+          changed={changed}
+          setChanged={setChanged}
+          categories={categories}
+          setCats={setCats}
+          subcategories={subcategories}
+          setSubs={setSubs}
+          setShowEnterPurchase={setShowEnterPurchase}
+          />
+         }
+         { showCreateCategory && <CreateCategory
+          categories={categories}
+          setCats={setCats}
+          setShowCreateCategory={setShowCreateCategory}
+          />
+         }
+         { showCreateSubCat && <CreateSubCat
+          subcategories={subcategories}
+          setSubs={setSubs}
+          setShowCreateSubCat={setShowCreateSubCat}
+          />
+         }
+
         { showTable && <TableView
           categories={categories}
           subcategories={subcategories}
