@@ -10,7 +10,13 @@ export function ListView(props) {
     const [ month, setMonth ] = useState(new Date().getMonth() + 1); // Months are 0-indexed
     const [ mode, setMode ] = useState('month'); // 'month' or 'year'
 
-    const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    function monthName(y, m) {
+        try {
+            return new Date(y, m - 1).toLocaleString(undefined, { month: 'long' });
+        } catch (e) {
+            return '';
+        }
+    }
 
     // reloadData fetches purchases and purchaseItems and updates state
     async function reloadData() {
@@ -114,9 +120,9 @@ export function ListView(props) {
             <div className="listview-header">
                 <div className="title">
                     {mode === 'month' ? (
-                        <h2>{MONTH_NAMES[month - 1]} {year}</h2>
+                        <h2>{monthName(year, month)} {year} — {purchases.length} purchase(s)</h2>
                     ) : (
-                        <h2>Year {year}</h2>
+                        <h2>{year} — {purchases.length} purchase(s)</h2>
                     )}
                 </div>
 
