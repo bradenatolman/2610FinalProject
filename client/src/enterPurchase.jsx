@@ -1,4 +1,4 @@
-import "./enterPurchase.css";
+import "./views.css";
 import { useState, useEffect } from "react";
 import * as cookie from "cookie";
 

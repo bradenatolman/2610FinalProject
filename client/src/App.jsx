@@ -109,8 +109,6 @@ function App() {
          { showList && <ListView 
           categories={categories}
           subcategories={subcategories}
-          setCats={setCats}
-          setSubs={setSubs}
           edit={edit}
           changed={changed}
           /> }
