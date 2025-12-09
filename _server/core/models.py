@@ -5,31 +5,23 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Helper functions
-def get_uncategorized_category_for_user(user):
-    """
-    Return (and create if needed) the per-user 'Uncategorized' Category.
-    Always returns a Category instance (never None) for a valid User.
-    """
-    if user is None:
+def get_uncategorized_cat(deleted_category):
+    if deleted_category is None:
         return None
     cat, _ = Category.objects.get_or_create(
-        user=user,
+        user=deleted_category.user,
         name="Uncategorized",
         defaults={"rank": 9999, "color": "#FFFFFF"},
     )
     return cat
 
 
-def get_or_create_uncategorized_subcategory_for_category(category):
-    """
-    Return (and create if needed) the 'Uncategorized' SubCategory under the given category.
-    If category is None, returns None.
-    """
-    if category is None:
+def get_uncategorized_sub(deleted_subcategory):
+    if deleted_subcategory is None:
         return None
     sub, _ = SubCategory.objects.get_or_create(
-        category=category,
-        name="Uncategorized",
+        category=deleted_subcategory.category,
+        name="Uncategorized"
     )
     return sub
 
@@ -52,7 +44,7 @@ class Category(models.Model):
 
 
 class SubCategory(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.SET(get_uncategorized_cat))
     name = models.CharField(max_length=100)
 
     class Meta:
@@ -81,12 +73,8 @@ class Month(models.Model):
 class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     month = models.ForeignKey(Month, on_delete=models.CASCADE)
-
-    def _set_uncategorized_category(deleted_category):
-        return get_uncategorized_category_for_user(deleted_category.user)
-
-    category = models.ForeignKey(Category, on_delete=SET(_set_uncategorized_category))
-    subcategory = models.ForeignKey(       SubCategory, null=True, blank=True, on_delete=models.SET_NULL)
+    category = models.ForeignKey(Category, on_delete=SET(get_uncategorized_cat))
+    subcategory = models.ForeignKey(SubCategory, null=True, blank=True, on_delete=models.SET(get_uncategorized_sub))
     budget = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     def clean(self):
@@ -127,13 +115,6 @@ class Purchase(models.Model):
 class PurchaseItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE)
-
-    # If a Category is deleted, set the item category to the user's Uncat category.
-    def _set_uncategorized_category_for_item(deleted_category):
-        return get_uncategorized_category_for_user(deleted_category.user)
-
-    category = models.ForeignKey(Category, on_delete=SET(_set_uncategorized_category_for_item))
-
-    # If a SubCategory is deleted, set the item.subcategory to NULL (uncategorized).
-    subcategory = models.ForeignKey(       SubCategory, null=True, blank=True, on_delete=models.SET_NULL)
+    category = models.ForeignKey(Category, on_delete=models.SET(get_uncategorized_cat))
+    subcategory = models.ForeignKey(SubCategory, null=True, blank=True, on_delete=models.SET(get_uncategorized_sub))
     amount = models.DecimalField(max_digits=12, decimal_places=2)
