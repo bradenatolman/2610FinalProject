@@ -2,6 +2,7 @@ import "./tableView.css";
 import * as cookie from "cookie";
 import { EditText, EditNum } from "./tableInput.jsx";
 import { useEffect, useState } from "react";
+// import Donut from "./Graphs.jsx";
 
 export function TableView(props) {
     const { edit, categories, subcategories, setCats, setSubs, changed, setChanged } = props;
@@ -80,6 +81,18 @@ export function TableView(props) {
 
     return (
          <div>  
+            {/* <div className="graphs"> 
+                <Donut changed={changed} 
+                data={categories.map(cat => {                    
+                    return ({
+                        name: cat.name,
+                        value: budgets[`${cat.id}`] || 0,
+                    });
+                })}
+                defaultIndex={0} />
+
+            </div> */}
+
             <div className="title-month">
                 <h1> 
                     <span onClick={updateMonth(-1)}> 〈 </span>
