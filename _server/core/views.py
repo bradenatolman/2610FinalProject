@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from django.db import transaction
 from decimal import Decimal
 from .models import Category, SubCategory, PurchaseItem, Month, Budget, Purchase
+from django.db import IntegrityError
 
 # Load manifest when server launches
 MANIFEST = {}
@@ -124,15 +125,38 @@ def getActualDict(req, month):
     actual_dict = {}
     for p in purchases:
         for item in PurchaseItem.objects.filter(purchase=p):
-            # subcategory actuals
-            key = f"{item.subcategory.id}"
+            # handle possible NULL subcategory/category (they may be SET_NULL)
+            sub_name = None
+            cat_name = None
+            if getattr(item, 'subcategory', None) is not None:
+                try:
+                    sub_name = item.subcategory.name
+                except Exception:
+                    sub_name = None
+            if getattr(item, 'category', None) is not None:
+                try:
+                    cat_name = item.category.name
+                except Exception:
+                    cat_name = None
+
+            # prefer category / "Uncategorized" when subcategory missing
+            if sub_name:
+                key = f"{sub_name}"
+            elif cat_name:
+                key = f"{cat_name} / Uncategorized"
+            else:
+                key = "Uncategorized"
+
             actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
 
             # category actuals
-            key_cat = f"{item.category.id}"
+            if cat_name:
+                key_cat = f"{cat_name}"
+            else:
+                key_cat = "Uncategorized"
             actual_dict[key_cat] = actual_dict.get(key_cat, 0) + float(item.amount)
 
-            if item.category.name == "Income":
+            if cat_name == "Income":
                 # total month income
                 actual_dict["income_actual"] = actual_dict.get("income_actual", 0) + float(item.amount)
             else:
@@ -145,21 +169,40 @@ def getActualDict(req, month):
 def getBudgetDict(req, month):
     budgets = Budget.objects.filter(user=req.user, month=month)
     budget_dict = {}
+    # Set total_budget once, outside the loop
+    budget_dict["total_budget"] = float(month.total_budget)
     for b in budgets:
-        # subcategory budgets
-        key = f"{b.subcategory.id}"
+        # defensive handling for possible NULL subcategory/category
+        sub_name = None
+        cat_name = None
+        if getattr(b, 'subcategory', None) is not None:
+            try:
+                sub_name = b.subcategory.name
+            except Exception:
+                sub_name = None
+        if getattr(b, 'category', None) is not None:
+            try:
+                cat_name = b.category.name
+            except Exception:
+                cat_name = None
+
+        if sub_name:
+            key = f"{sub_name}"
+        elif cat_name:
+            key = f"{cat_name} / Uncategorized"
+        else:
+            key = "Uncategorized"
+
         budget_dict[key] = float(b.budget)
 
         # category budgets
-        key_cat = f"{b.category.id}"
+        key_cat = cat_name if cat_name else "Uncategorized"
         budget_dict[key_cat] = budget_dict.get(key_cat, 0) + float(b.budget)
 
-        if b.category.name == "Income":
-            # total month income
+        if key_cat == "Income":
             budget_dict["income_expected"] = budget_dict.get("income_expected", 0) + float(b.budget)
         else:
-            # total month budget and expected budget
-            budget_dict["total_budget"] = float(month.total_budget)
+            # total month expected budget
             budget_dict["expected_total"] = budget_dict.get("expected_total", 0) + float(b.budget)
     
     return budget_dict
@@ -172,16 +215,8 @@ def createBase(user, year, month):
         date=datetime.date(year, month, 1),
         total=0,
     )
-
-    # Predefined Categories
-    categories = Category.objects.filter(user=user)
-    subcategories = SubCategory.objects.filter(category__user=user)
-    if not categories:
-        categories = ["Income","Housing","Transportation","Food","Utilities","Savings",
-            "Entertainment","Miscellaneous"
-        ]
-
-        # Predefined SubCategories
+    if not Category.objects.filter(user=user).first():
+        # Predefined categories and subcategories
         subcategories = {
             "Income": ["Salary"],
             "Housing": ["Rent"],
@@ -190,7 +225,9 @@ def createBase(user, year, month):
             "Utilities": ["Electricity", "Water", "Internet", "Phone", "Gas"],
             "Savings": ["Emergency Fund", "Retirement", "Investments"],
             "Entertainment": ["Movies", "Concerts", "Hobbies"],
-            "Miscellaneous": ["Gifts", "Donations", "Subscriptions"]
+            "Miscellaneous": ["Gifts", "Donations", "Subscriptions"],
+            'Uncategorized': []
+
         }
         for cat_name, subcat_list in subcategories.items():
             cat_obj, _ = Category.objects.get_or_create(user=user, name=cat_name)
@@ -213,7 +250,9 @@ def createBase(user, year, month):
                     amount=0
                 )
     else:
-        for sub in subcategories:
+        # Iterate existing SubCategory objects for this user's categories
+        existing_subs = SubCategory.objects.filter(category__user=user)
+        for sub in existing_subs:
             # Ensure Budget exists for each subcategory with 0 amount
             Budget.objects.get_or_create(
                 user=user,
@@ -314,6 +353,9 @@ def purchases(req):
                 sub_obj = SubCategory.objects.filter(id=sub_id, category=cat_obj).first()
                 if not sub_obj:
                     raise ValueError(f"Subcategory id {sub_id} not found for category {cat_id}")
+            else: # Allow null subcategory
+                sub_obj = SubCategory.objects.get_or_create(name="Uncategorized", category=cat_obj)[0]
+
 
             validated.append({
                 "category": cat_obj,
@@ -398,6 +440,38 @@ def purchase_detail(req, purchase_id):
         p.delete()
         return JsonResponse({"success": True, "id": purchase_id})
 
+    # Support POST for updates to a purchase (description, total, date)
+    if req.method == "POST":
+        p = Purchase.objects.filter(id=purchase_id, user=req.user).first()
+        if not p:
+            return JsonResponse({"error": "Purchase not found"}, status=404)
+        try:
+            body = json.loads(req.body.decode("utf-8") or "{}")
+        except Exception:
+            body = {}
+
+        # allow updating description, total, date
+        changed = False
+        if "description" in body:
+            p.description = body.get("description")
+            changed = True
+        if "total" in body:
+            try:
+                p.total = Decimal(str(body.get("total")))
+                changed = True
+            except Exception:
+                pass
+        if "date" in body:
+            try:
+                p.date = datetime.datetime.strptime(body.get("date"), "%Y-%m-%d").date()
+                changed = True
+            except Exception:
+                pass
+
+        if changed:
+            p.save()
+        return JsonResponse({"success": True, "id": purchase_id})
+
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
@@ -417,6 +491,44 @@ def purchase_item_detail(req, item_id):
                 parent.save()
         return JsonResponse({"success": True, "id": item_id})
 
+    # POST to update a purchase item (amount, category, subcategory)
+    if req.method == "POST":
+        it = PurchaseItem.objects.filter(id=item_id, user=req.user).first()
+        if not it:
+            return JsonResponse({"error": "Item not found"}, status=404)
+        try:
+            body = json.loads(req.body.decode("utf-8") or "{}")
+        except Exception:
+            body = {}
+
+        with transaction.atomic():
+            parent = Purchase.objects.filter(id=it.purchase.id, user=req.user).first()
+            old_amount = float(it.amount) if getattr(it, "amount", None) is not None else 0
+
+            if "amount" in body:
+                try:
+                    it.amount = Decimal(str(body.get("amount")))
+                except Exception:
+                    pass
+            if "categoryId" in body:
+                cat = Category.objects.filter(id=body.get("categoryId"), user=req.user).first()
+                if cat:
+                    it.category = cat
+            if "subcategoryId" in body:
+                sub = SubCategory.objects.filter(id=body.get("subcategoryId"), category__user=req.user).first()
+                if sub:
+                    it.subcategory = sub
+
+            it.save()
+
+            # adjust parent total if amount changed
+            if parent:
+                new_amount = float(it.amount) if getattr(it, "amount", None) is not None else 0
+                parent.total = parent.total - Decimal(old_amount) + Decimal(new_amount)
+                parent.save()
+
+        return JsonResponse({"success": True, "id": item_id})
+
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 @login_required
@@ -424,7 +536,11 @@ def change(req):
     if req.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
 
-    body = json.loads(req.body)
+    try:
+        body = json.loads(req.body.decode("utf-8") or "{}")
+    except Exception:
+        body = {}
+
     obj_type = body.get("type")
     obj_id = body.get("id")
     content = body.get("content")
@@ -440,10 +556,23 @@ def change(req):
     elif obj_type == "sub":
         obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
     elif obj_type == "number":
-        month = Month.objects.filter(user=req.user, id=month.get("id")).first()
+        # expect `month` to be a dict like {"id": <month_id>} coming from the client
+        if not month or not isinstance(month, dict) or not month.get("id"):
+            return JsonResponse({"error": "month (with id) is required for budget updates"}, status=400)
+
+        month_obj = Month.objects.filter(user=req.user, id=month.get("id")).first()
+        if not month_obj:
+            return JsonResponse({"error": "Month not found"}, status=404)
+
         sub = SubCategory.objects.filter(id=obj_id).first()
         cat = sub.category if sub else None
-        obj = Budget.objects.get_or_create(month=month, category= cat, subcategory=sub, user=req.user)[0]
+        obj = Budget.objects.get_or_create(month=month_obj, category=cat, subcategory=sub, user=req.user)[0]
+
+    elif obj_type == "color":
+        obj = Category.objects.filter(id=obj_id, user=req.user).first()
+        obj.color = content
+        obj.save()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_color": content})
     else:
         return JsonResponse({"error": "Invalid type"}, status=400)
 
@@ -458,3 +587,58 @@ def change(req):
         obj.name = content
         obj.save()
         return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_name": content})
+
+@login_required
+def delete(req):
+    if req.method == "POST":
+        body = json.loads(req.body)
+        obj_type = body.get("type")
+        obj_id = body.get("id")
+
+        if obj_type == "cat":
+            obj = Category.objects.filter(id=obj_id, user=req.user).first()
+        elif obj_type == "sub":
+            obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
+        else:
+            return JsonResponse({"error": "Invalid type"}, status=400)
+
+        if not obj:
+            return JsonResponse({"error": "Object not found"}, status=404)
+
+        # If deleting a Category, reassign related rows to a per-user "Uncategorized" category
+        if obj_type == "cat":
+            try:
+                with transaction.atomic():
+                    unc_cat, _ = Category.objects.get_or_create(
+                        user=req.user,
+                        name="Uncategorized",
+                        defaults={"rank": 9999, "color": "#FFFFFF"},
+                    )
+
+                    # Move Budgets and PurchaseItems referencing this category
+                    Budget.objects.filter(category=obj).update(category=unc_cat)
+                    PurchaseItem.objects.filter(category=obj).update(category=unc_cat)
+
+                    # Move subcategories into the uncategorized category
+                    subs = list(SubCategory.objects.filter(category=obj))
+                    for sub in subs:
+                        original_name = sub.name
+                        target_name = original_name
+                        suffix = 1
+                        while SubCategory.objects.filter(category=unc_cat, name=target_name).exists():
+                            target_name = f"{original_name} (moved {suffix})"
+                            suffix += 1
+                        sub.category = unc_cat
+                        sub.name = target_name
+                        try:
+                            sub.save()
+                        except IntegrityError:
+                            # skip problematic subcategory
+                            continue
+
+            except Exception:
+                return JsonResponse({"error": "Failed to reassign related objects before delete"}, status=500)
+
+        # Now safe to delete
+        obj.delete()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type})

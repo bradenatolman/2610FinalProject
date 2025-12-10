@@ -140,6 +140,7 @@ function App() {
           subcategories={subcategories}
           edit={edit}
           changed={changed}
+          setChanged={setChanged}
           /> }
 
          { showYear && <YearView
