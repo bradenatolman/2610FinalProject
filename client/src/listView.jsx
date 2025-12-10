@@ -115,11 +115,7 @@ export function ListView(props) {
                                     return (
                                         <tr key={`item-${pi.id}`} className="purchase-item-row">
                                             <td></td>
-                                            <td>{
-                                            !edit ? catName : (
-                                                
-                                            )
-                                            }{subName ? ` / ${subName}` : ""}</td>
+                                            <td>{catName}{subName ? ` / ${subName}` : ""}</td>
                                             <td>{
                                             !edit ? amount : (
                                                 <EditItemNum
