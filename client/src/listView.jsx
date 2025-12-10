@@ -1,7 +1,7 @@
 import "./listView.css";
 import React, { useState, useEffect } from "react";
 import * as cookie from "cookie";
-import { EditNum } from "./tableInput";
+import { EditItemNum } from "./tableInput";
 
 export function ListView(props) {
     const { categories, subcategories, setCats, setSubs, edit, changed, setChanged } = props;
@@ -115,12 +115,15 @@ export function ListView(props) {
                                     return (
                                         <tr key={`item-${pi.id}`} className="purchase-item-row">
                                             <td></td>
-                                            <td>{catName}{subName ? ` / ${subName}` : ""}</td>
+                                            <td>{
+                                            !edit ? catName : (
+                                                
+                                            )
+                                            }{subName ? ` / ${subName}` : ""}</td>
                                             <td>{
                                             !edit ? amount : (
-                                                <EditNum
+                                                <EditItemNum
                                                     number={amount}
-                                                    ismonth={false}
                                                     id={pi.id}
                                                     changed={changed}
                                                     setChanged={setChanged}

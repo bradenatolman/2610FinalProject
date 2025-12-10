@@ -83,6 +83,59 @@ export function EditNum(props) {
   )
 }
 
+// Edit numeric amount for a PurchaseItem (mirrors EditNum UX but posts to purchaseItems endpoint)
+export function EditItemNum(props) {
+  const { id, number, changed, setChanged } = props;
+  const [num, setNum] = useState(number || 0);
+  const [yellow, setYellow] = useState(false);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    changeNum(id, num);
+    setYellow(false);
+  }
+
+  async function changeNum(itemId, value) {
+    try {
+      const res = await fetch(`/purchaseItems/${itemId}/`, {
+        method: "POST",
+        credentials: "same-origin",
+        body: JSON.stringify({ amount: value }),
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": cookie.parse(document.cookie).csrftoken,
+        },
+      });
+      if (!res.ok) {
+        const b = await res.json().catch(() => ({}));
+        alert(b.error || "Failed to save item");
+      } else {
+        setChanged(!changed);
+      }
+    } catch (err) {
+      console.error("Failed to change purchase item:", err);
+      alert("Network error saving item");
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label>
+          <input
+            type="number"
+            value={num}
+            style={{ width: `${(String(num).length + 4)}ch`, backgroundColor: yellow ? "yellow" : "white" }}
+            onChange={(e) => { setNum(e.target.value); setYellow(true); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur(); } }}
+            onBlur={(e) => { changeNum(id, e.target.value); setYellow(false); }}
+          />
+        </label>
+      </div>
+    </form>
+  );
+}
+
 export function EditColor(props) {
     const {id, val, changed, setChanged} = props;
     const [color, setColor] = useState(val);
