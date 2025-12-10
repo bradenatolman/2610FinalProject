@@ -1,9 +1,11 @@
 import "./views.css";
 import React, { useState, useEffect } from "react";
 import * as cookie from "cookie";
+import { EditItemNum } from "./tableInput";
 
 export function ListView(props) {
-    const { categories, subcategories, setCats, setSubs, edit, changed } = props;
+    const { categories, subcategories, setCats, setSubs, edit, changed, setChanged } = props;
+
     const [ purchases, setPurchases] = useState([]);
     const [ purchaseItems, setPurchaseItems ] = useState([]);
     const [ year, setYear ] = useState(new Date().getFullYear());
@@ -75,10 +77,6 @@ export function ListView(props) {
 
     function changeYear(delta) {
         setYear(prev => prev + delta);
-    }
-
-    function handleEdit(purchaseId) {
-        // Implement edit functionality here
     }
 
     function handleDelete(purchaseId, type) {
@@ -164,7 +162,6 @@ export function ListView(props) {
                                 <td>{purchase.description}</td>
                                 <td>{purchase.total}</td>
                                     {edit && <td>
-                                    <button onClick={() => handleEdit(purchase.id)}>Edit</button>
                                     <button onClick={() => handleDelete(purchase.id, "purchase")}>Delete</button>
                                 </td>}
                             </tr>
@@ -182,9 +179,16 @@ export function ListView(props) {
                                         <tr key={`item-${pi.id}`} className="purchase-item-row">
                                             <td></td>
                                             <td>{catName}{subName ? ` / ${subName}` : ""}</td>
-                                            <td>{amount}</td>
+                                            <td>{
+                                            !edit ? amount : (
+                                                <EditItemNum
+                                                    number={amount}
+                                                    id={pi.id}
+                                                    changed={changed}
+                                                    setChanged={setChanged}
+                                                />
+                                            )}</td>
                                             {edit && <td>
-                                                <button onClick={() => handleEdit(pi.id)}>Edit</button>
                                                 <button onClick={() => handleDelete(pi.id, "purchaseItem")}>Delete</button>
                                             </td>}
                                         </tr>

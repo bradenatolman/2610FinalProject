@@ -1,3 +1,4 @@
+
 import "./views.css";
 import * as cookie from "cookie";
 import { EditText, EditNum, EditColor } from "./tableInput.jsx";
@@ -12,6 +13,7 @@ export function TableView(props) {
     const [month, setMonth] = useState({month: 0, year: 0});
     const [showIncomeSummary, setShowIncomeSummary] = useState(false);
     const [objToDel, setObjToDel] = useState({id: null, type: null});
+
     const [showGraphs, setShowGraphs] = useState(false);
 
    
@@ -81,7 +83,8 @@ export function TableView(props) {
     }, [objToDel]);
 
     return (
-         <div className="tableView">  
+
+         <div>
             <div className="title-month">
                 <h1> 
                     <span onClick={updateMonth(-1)}> 〈 </span>
