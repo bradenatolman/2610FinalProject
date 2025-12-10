@@ -78,9 +78,6 @@ export function ListView(props) {
         setYear(prev => prev + delta);
     }
 
-    function handleEdit(purchaseId) {
-    }
-
     function handleDelete(purchaseId, type) {
         (async () => {
             try {
