@@ -124,12 +124,11 @@ def getActualDict(req, month):
     actual_dict = {}
     for p in purchases:
         for item in PurchaseItem.objects.filter(purchase=p):
-            # subcategory actuals
-            key = f"{item.subcategory.id}"
+            key = f"{item.subcategory.name}"
             actual_dict[key] = actual_dict.get(key, 0) + float(item.amount)
 
             # category actuals
-            key_cat = f"{item.category.id}"
+            key_cat = f"{item.category.name}"
             actual_dict[key_cat] = actual_dict.get(key_cat, 0) + float(item.amount)
 
             if item.category.name == "Income":
@@ -145,21 +144,21 @@ def getActualDict(req, month):
 def getBudgetDict(req, month):
     budgets = Budget.objects.filter(user=req.user, month=month)
     budget_dict = {}
+    # Set total_budget once, outside the loop
+    budget_dict["total_budget"] = float(month.total_budget)
     for b in budgets:
-        # subcategory budgets
-        key = f"{b.subcategory.id}"
+        key = f"{b.subcategory.name}"
         budget_dict[key] = float(b.budget)
 
         # category budgets
-        key_cat = f"{b.category.id}"
+        key_cat = f"{b.category.name}"
         budget_dict[key_cat] = budget_dict.get(key_cat, 0) + float(b.budget)
+       
 
         if b.category.name == "Income":
-            # total month income
             budget_dict["income_expected"] = budget_dict.get("income_expected", 0) + float(b.budget)
         else:
-            # total month budget and expected budget
-            budget_dict["total_budget"] = float(month.total_budget)
+            # total month expected budget
             budget_dict["expected_total"] = budget_dict.get("expected_total", 0) + float(b.budget)
     
     return budget_dict
@@ -172,16 +171,8 @@ def createBase(user, year, month):
         date=datetime.date(year, month, 1),
         total=0,
     )
-
-    # Predefined Categories
-    categories = Category.objects.filter(user=user)
-    subcategories = SubCategory.objects.filter(category__user=user)
-    if not categories:
-        categories = ["Income","Housing","Transportation","Food","Utilities","Savings",
-            "Entertainment","Miscellaneous"
-        ]
-
-        # Predefined SubCategories
+    if not Category.objects.filter(user=user).first():
+        # Predefined categories and subcategories
         subcategories = {
             "Income": ["Salary"],
             "Housing": ["Rent"],
@@ -190,7 +181,9 @@ def createBase(user, year, month):
             "Utilities": ["Electricity", "Water", "Internet", "Phone", "Gas"],
             "Savings": ["Emergency Fund", "Retirement", "Investments"],
             "Entertainment": ["Movies", "Concerts", "Hobbies"],
-            "Miscellaneous": ["Gifts", "Donations", "Subscriptions"]
+            "Miscellaneous": ["Gifts", "Donations", "Subscriptions"],
+            'Uncategorized': []
+
         }
         for cat_name, subcat_list in subcategories.items():
             cat_obj, _ = Category.objects.get_or_create(user=user, name=cat_name)
@@ -314,6 +307,9 @@ def purchases(req):
                 sub_obj = SubCategory.objects.filter(id=sub_id, category=cat_obj).first()
                 if not sub_obj:
                     raise ValueError(f"Subcategory id {sub_id} not found for category {cat_id}")
+            else: # Allow null subcategory
+                sub_obj = SubCategory.objects.get_or_create(name="Uncategorized", category=cat_obj)[0]
+
 
             validated.append({
                 "category": cat_obj,
@@ -444,6 +440,12 @@ def change(req):
         sub = SubCategory.objects.filter(id=obj_id).first()
         cat = sub.category if sub else None
         obj = Budget.objects.get_or_create(month=month, category= cat, subcategory=sub, user=req.user)[0]
+
+    elif obj_type == "color":
+        obj = Category.objects.filter(id=obj_id, user=req.user).first()
+        obj.color = content
+        obj.save()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_color": content})
     else:
         return JsonResponse({"error": "Invalid type"}, status=400)
 
@@ -458,3 +460,23 @@ def change(req):
         obj.name = content
         obj.save()
         return JsonResponse({"success": True, "id": obj_id, "type": obj_type, "new_name": content})
+
+@login_required
+def delete(req):
+    if req.method == "POST":
+        body = json.loads(req.body)
+        obj_type = body.get("type")
+        obj_id = body.get("id")
+
+        if obj_type == "cat":
+            obj = Category.objects.filter(id=obj_id, user=req.user).first()
+        elif obj_type == "sub":
+            obj = SubCategory.objects.filter(id=obj_id, category__user=req.user).first()
+        else:
+            return JsonResponse({"error": "Invalid type"}, status=400)
+
+        if not obj:
+            return JsonResponse({"error": "Object not found"}, status=404)
+
+        obj.delete()
+        return JsonResponse({"success": True, "id": obj_id, "type": obj_type})

@@ -1,12 +1,12 @@
 :root {
-    --table-bg: #ffffff;
-    --header-bg: #f4f6f8;
-    --header-color: #0f1724;
-    --text-color: #111827;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --stripe: #fbfdff;
-    --hover: #f1f5f9;
+    --table-bg: rgba(255, 255, 255);
+    --head-th-bg: rgb(244, 246, 248, 0.6);
+    --header-color: rgb(15, 23, 36);
+    --text-color: rgb(17, 24, 39);
+    --muted: rgb(107, 114, 128);
+    --border: rgb(229, 231, 235);
+    --stripe: rgb(251, 253, 255);
+    --hover: rgb(241, 245, 249);
     --radius: 8px;
     --fs: 14px;
 }
@@ -34,7 +34,22 @@
     padding-left: 25px;
 }
 
+.month-summary th {
+    background:  #f4f6f8;
+}
 
+.left span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.left span button {
+    font-size: 1rem;
+    padding: 0;
+    background-color: #ffffff00;
+    cursor: pointer;
+}
 
 
 
@@ -98,8 +113,7 @@ td:not(.left) {
 
 /* Header */
 thead th {
-    border-radius: 10px 10px 0 0;
-    background: var(--header-bg);
+    background: var(--head-th-bg);
     color: var(--header-color);
     font-weight: 600;
     font-size: 0.95rem;
@@ -107,6 +121,14 @@ thead th {
     position: sticky;
     top: 0;
     z-index: 2;
+}
+
+.top-left {
+     border-radius: 10px  0 0 0;
+}
+
+.top-right {
+    border-radius: 0 10px 0 0;
 }
 
 /* Zebra striping */
@@ -118,11 +140,6 @@ tbody tr:nth-child(even) {
 tbody tr:hover {
     background: var(--hover);
     transition: background-color 120ms ease;
-}
-
-/* Selected row helper class */
-tr.is-selected {
-    background: rgba(59, 130, 246, 0.08); /* subtle blue */
 }
 
 /* Small, subtle footers */
@@ -421,3 +438,18 @@ td.left, th.left {
 .menu-dropdown.open .hidden-btn:nth-child(1) { transition-delay: 0ms; }
 .menu-dropdown.open .hidden-btn:nth-child(2) { transition-delay: 30ms; }
 .menu-dropdown.open .hidden-btn:nth-child(3) { transition-delay: 60ms; }
+
+
+input[type="color"] {
+    border: rgb(255, 255, 255) solid 2px;
+    border-radius: 4px;
+    padding: 0;
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+    background-color: #ffffff00;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
