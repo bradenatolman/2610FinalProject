@@ -28,8 +28,6 @@
     cursor: pointer;
 }
 
-
-
 .year-summary tbody td.left {
     padding-left: 25px;
 }
@@ -53,8 +51,6 @@
 
 
 
-/* Table */
-
 .table-container {
     margin-top: 40px;
     display: flex;
@@ -64,7 +60,6 @@
     max-height: 70vh;
 }
 
-/* Container to allow horizontal scrolling on small screens */
 .table-wrapper {
     width: 100%;
     overflow-x: auto;
@@ -72,7 +67,6 @@
     border-radius: 10px;
 }
 
-/* Base table styles */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -85,7 +79,6 @@ table {
     font-size: var(--fs);
 }
 
-/* Caption */
 table caption {
     text-align: left;
     padding: 0.5rem 0;
@@ -93,7 +86,6 @@ table caption {
     color: var(--muted);
 }
 
-/* Cells */
 th,
 td {
     padding: 0.75rem 1rem;
@@ -111,7 +103,6 @@ td:not(.left) {
     text-align: center;
 }
 
-/* Header */
 thead th {
     background: var(--head-th-bg);
     color: var(--header-color);
@@ -131,18 +122,15 @@ thead th {
     border-radius: 0 10px 0 0;
 }
 
-/* Zebra striping */
 tbody tr:nth-child(even) {
     background: var(--stripe);
 }
 
-/* Hover state */
 tbody tr:hover {
     background: var(--hover);
     transition: background-color 120ms ease;
 }
 
-/* Small, subtle footers */
 tfoot td {
     padding: 0.5rem 1rem;
     color: var(--muted);
@@ -150,14 +138,12 @@ tfoot td {
     border-top: 1px solid var(--border);
 }
 
-/* Compact variant */
 .table--compact th,
 .table--compact td {
     padding: 0.4rem 0.6rem;
     font-size: var(--fs);
 }
 
-/* Bordered variant */
 .table--bordered {
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -172,7 +158,6 @@ tfoot td {
     border-right: none;
 }
 
-/* Responsive tweaks */
 @media (max-width: 640px) {
     th, td {
         padding: 0.5rem 0.6rem;
@@ -184,14 +169,12 @@ tfoot td {
     }
 }
 
-/* Accessibility: focus for keyboard users */
 tbody tr:focus-within,
 tbody tr:focus {
     outline: 2px solid rgba(59,130,246,0.2);
     outline-offset: -2px;
 }
 
-/* Utility: right/center align cells */
 td.is-right,
 th.is-right {
     text-align: right;
@@ -202,7 +185,6 @@ th.is-center {
 }
 
 
-/* Chrome, Safari, Edge */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -224,9 +206,27 @@ input[type="number"] {
     background-color: #ffffff00;
 }
 
-/* ---------- Additional app styles (appended) ---------- */
+.ListView input,
+.table-container input,
+table input,
+input[type="number"],
+input[type="text"],
+input[type="date"] {
+    color: var(--text-color);
+    background-color: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    box-shadow: none;
+}
 
-/* List view container */
+.ListView input:focus,
+.table-container input:focus,
+table input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
 .ListView {
     padding: 1rem;
     background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);
@@ -234,17 +234,12 @@ input[type="number"] {
     box-shadow: 0 6px 18px rgba(15, 23, 36, 0.04);
 }
 
-/* Make purchase header rows stand out */
-
-
-/* Purchase item rows (indented, lighter) */
 .purchase-item-row td {
     padding-left: 1.5rem;
     color: var(--muted);
     font-size: 0.95rem;
 }
 
-/* Action buttons */
 .ListView button {
     background: transparent;
     border: 1px solid var(--border);
@@ -263,13 +258,11 @@ input[type="number"] {
     transform: translateY(0);
 }
 
-/* Small icon-like buttons */
 .ListView button.small {
     padding: 4px 6px;
     font-size: 0.8rem;
 }
 
-/* Year view specific */
 .title-year h1 {
     font-size: 1.6rem;
     font-weight: 700;
@@ -284,31 +277,26 @@ input[type="number"] {
     overflow: hidden;
 }
 
-/* Month list in year view */
 .category-table table {
     max-width: 920px;
     margin: 0 auto;
 }
 
-/* Empty state */
 .ListView .empty, .year-summary .empty {
     text-align: center;
     color: var(--muted);
     padding: 2rem 1rem;
 }
 
-/* Utility: subtle divider for purchase header rows */
 .ListView .purchase-header {
     border-bottom: 1px solid var(--border);
 }
 
-/* Make left-aligned cells a little wider */
 td.left, th.left {
     min-width: 160px;
     text-align: left;
 }
 
-/* Responsive tweaks for the new additions */
 @media (max-width: 640px) {
     .ListView {
         padding: 0.5rem;
@@ -318,7 +306,6 @@ td.left, th.left {
     }
 }
 
-/* ListView header controls */
 .listview-header {
     display: flex;
     justify-content: space-between;
@@ -356,14 +343,12 @@ td.left, th.left {
     cursor: pointer;
 }
 
-/* Navbar base to anchor absolute dropdowns */
 .Navbar {
   position: relative;
-  z-index: 20; /* ensures dropdowns stack above page content */
+  z-index: 20;
   justify-content: center;
 }
 
-/* keep the top row inline */
 .menu-row {
   display: flex;
   gap: 8px;
@@ -384,11 +369,10 @@ td.left, th.left {
     margin-bottom: 5px;
 }
 
-/* dropdown container (floating, does not affect layout) */
 .menu-dropdown {
   position: absolute;
-  top: calc(100% + 8px); /* sits below the Navbar row */
-  left: 0;                /* align with left of Navbar; change to center if desired */
+  top: calc(100% + 8px);
+  left: 0;
   min-width: 180px;
   background: white;
   border-radius: 8px;
@@ -401,14 +385,12 @@ td.left, th.left {
   transition: transform 180ms cubic-bezier(.2,.9,.2,1), opacity 140ms ease-in-out;
 }
 
-/* show dropdown */
 .menu-dropdown.open {
   pointer-events: auto;
   transform: translateY(0) scaleY(1);
   opacity: 1;
 }
 
-/* optional narrowing for mobile */
 @media (max-width: 640px) {
   .menu-dropdown {
     left: 8px;
@@ -418,14 +400,12 @@ td.left, th.left {
   }
 }
 
-/* if the child component renders a column of buttons, ensure spacing */
 .menu-dropdown > * {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* staggered fan effect for items inside dropdown */
 .menu-dropdown .hidden-btn {
   transform: translateY(-6px);
   opacity: 0;
@@ -438,8 +418,6 @@ td.left, th.left {
 .menu-dropdown.open .hidden-btn:nth-child(1) { transition-delay: 0ms; }
 .menu-dropdown.open .hidden-btn:nth-child(2) { transition-delay: 30ms; }
 .menu-dropdown.open .hidden-btn:nth-child(3) { transition-delay: 60ms; }
-
-
 input[type="color"] {
     border: rgb(255, 255, 255) solid 2px;
     border-radius: 4px;
@@ -455,7 +433,6 @@ input[type="color"]::-webkit-color-swatch-wrapper {
 }
 
 
-/* ---------- Graphs ---------- */
 .graphs {
     display: flex;
     flex-direction: row;
