@@ -1,4 +1,5 @@
 import "./views.css";
+import { LineGraph } from "./Graphs.jsx";
 import { useEffect, useState } from "react";
 
 export function YearView(props) {
@@ -113,7 +114,22 @@ export function YearView(props) {
                             </table>
                     </div>
             </div>
+
         
-         </div>
+            <div className="graphs"> 
+                <LineGraph
+                    data={months.map(mon => {
+                        return ({
+                            name: `${mon.monthName}`,
+                            Planned: mon.planned || 0,
+                            Expected: mon.expected || 0,
+                            Actual: mon.actual || 0,
+                        });
+                    })}
+                />
+            </div>  
+        
+        
+        </div>
     );
 }

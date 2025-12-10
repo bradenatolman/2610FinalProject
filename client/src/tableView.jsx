@@ -2,7 +2,7 @@ import "./views.css";
 import * as cookie from "cookie";
 import { EditText, EditNum, EditColor } from "./tableInput.jsx";
 import { useEffect, useState } from "react";
-// import Donut from "./Graphs.jsx";
+import {Donut, SimpleBarChart,} from "./Graphs.jsx";
 
 export function TableView(props) {
     const { edit, categories, subcategories, setCats, setSubs, changed, setChanged } = props;
@@ -12,6 +12,7 @@ export function TableView(props) {
     const [month, setMonth] = useState({month: 0, year: 0});
     const [showIncomeSummary, setShowIncomeSummary] = useState(false);
     const [objToDel, setObjToDel] = useState({id: null, type: null});
+    const [showGraphs, setShowGraphs] = useState(false);
 
    
     function updateMonth(delta) {
@@ -80,19 +81,7 @@ export function TableView(props) {
     }, [objToDel]);
 
     return (
-         <div>  
-            {/* <div className="graphs"> 
-                <Donut changed={changed} 
-                data={categories.map(cat => {                    
-                    return ({
-                        name: cat.name,
-                        value: budgets[`${cat.name}`] || 0,
-                    });
-                })}
-                defaultIndex={0} />
-
-            </div> */}
-
+         <div className="tableView">  
             <div className="title-month">
                 <h1> 
                     <span onClick={updateMonth(-1)}> 〈 </span>
@@ -142,7 +131,38 @@ export function TableView(props) {
                         </tr>
                     </tfoot>
                 </table>
+                <button onClick={() => setShowGraphs(!showGraphs)}>
+                    {showGraphs ? "Hide" : "Show"} Graphs
+                </button>
             </div>
+
+
+            {showGraphs && 
+                <div className="graphs"> 
+                    <Donut 
+                        changed={changed} 
+                        data={categories.map(cat => {                    
+                            return ({
+                                name: cat.name,
+                                value: actuals[`${cat.name}`] || 0,
+                                fill: cat.color,
+                            });
+                        })}
+                        name="Spent"
+                        defaultIndex={0} 
+                    />
+                    <SimpleBarChart
+                        data={categories.map(cat => {
+                            return ({
+                                name: `${cat.name}`,
+                                Expected: budgets[`${cat.name}`] || 0,
+                                Actual: actuals[`${cat.name}`] || 0,
+                                amt: 0
+                            });
+                        })}
+                    />  
+                </div>  
+            }
 
             <div className="table-container">
                 {categories.map(cat => {
