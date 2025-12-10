@@ -113,6 +113,7 @@ function App() {
           setSubs={setSubs}
           edit={edit}
           changed={changed}
+          setChanged={setChanged}
           /> }
 
          { showYear && <YearView
